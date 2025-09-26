@@ -1,7 +1,7 @@
 package main
 
 import (
-	initial "backend-chat-app/init"
+	"backend-chat-app/initial"
 	"log"
 
 	"github.com/gin-gonic/gin"
