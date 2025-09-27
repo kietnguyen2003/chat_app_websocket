@@ -60,3 +60,13 @@ type SendMesseageResponse struct {
 	Messeage  string `json:"messeage"`
 	CreatedAt int64  `json:"created_at"`
 }
+
+type Messeage struct {
+	SenderID  string `json:"sender_id"`
+	Messeage  string `json:"messeage"`
+	CreatedAt int64  `json:"created_at"`
+}
+type GetConversationMesseageResponse struct {
+	ConversationID string     `json:"conversation_id"`
+	Messeages      []Messeage `json:"messeages"`
+}

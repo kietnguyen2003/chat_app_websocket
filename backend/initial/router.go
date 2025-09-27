@@ -53,6 +53,7 @@ func SetupRouter(r *gin.Engine, JWTSecret string, client *mongo.Client) *gin.Eng
 	{
 		chatGroup.POST("/send", chatHandle.SendMesseage)
 		chatGroup.POST("/conversation", chatHandle.CreateConversation)
+		chatGroup.GET("/conversation/:id", chatHandle.GetConversation)
 	}
 	return r
 }

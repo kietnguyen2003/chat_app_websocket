@@ -3,6 +3,7 @@ package database
 import (
 	"backend-chat-app/internal/domain/messeage"
 
+	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
 )
@@ -58,4 +59,32 @@ func (mm *MongoMesseageRepository) toDomainMesseage(mongoMesseage MongoMesseage)
 		Messeage:       mongoMesseage.Messeage,
 		CreatedAt:      timeFromUnix(mongoMesseage.CreatedAt),
 	}
+}
+
+func (mm *MongoMesseageRepository) GetMessagesByConversationID(conversationID string) ([]*messeage.Messeage, error) {
+	ctx, cancel := withContextTimeout()
+	defer cancel()
+
+	objectID, err := primitive.ObjectIDFromHex(conversationID)
+	if err != nil {
+		return nil, err
+	}
+
+	cursor, err := mm.collection.Find(ctx, bson.M{"conversation_id": objectID})
+	if err != nil {
+		return nil, err
+	}
+	defer cursor.Close(ctx)
+
+	var mongoMessages []MongoMesseage
+	if err = cursor.All(ctx, &mongoMessages); err != nil {
+		return nil, err
+	}
+
+	messages := make([]*messeage.Messeage, len(mongoMessages))
+	for i, mongoMess := range mongoMessages {
+		messages[i] = mm.toDomainMesseage(mongoMess)
+	}
+
+	return messages, nil
 }

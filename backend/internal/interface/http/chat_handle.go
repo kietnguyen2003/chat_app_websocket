@@ -71,3 +71,18 @@ func (h *ChatHandle) SendMesseage(c *gin.Context) {
 	}
 	c.JSON(http.StatusCreated, SuccessResponse(res, "Conversation created successfully"))
 }
+
+func (h *ChatHandle) GetConversation(c *gin.Context) {
+	conversationId := c.Param("id")
+	if conversationId == "" {
+		c.JSON(http.StatusBadRequest, FailResponse(nil, "Failed to send Messeage"))
+		return
+	}
+	res, err := h.chatService.GetConversation(conversationId)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, FailResponse(nil, "Failed to send Messeage"))
+		return
+	}
+	c.JSON(http.StatusCreated, SuccessResponse(res, "Conversation created successfully"))
+
+}

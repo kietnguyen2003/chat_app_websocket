@@ -58,3 +58,24 @@ func (s *ChatService) SendMesseage(req application.SendMesseageRequest) (*applic
 		CreatedAt: res.CreatedAt.Unix(),
 	}, nil
 }
+
+func (s *ChatService) GetConversation(conversationID string) (*application.GetConversationMesseageResponse, error) {
+
+	messeages, err := s.messeageRepo.GetMessagesByConversationID(conversationID)
+	if err != nil {
+		return nil, err
+	}
+	// Convert *[]messeage.Messeage to []application.Messeage
+	var appMesseages []application.Messeage
+	for _, m := range messeages {
+		appMesseages = append(appMesseages, application.Messeage{
+			SenderID:  m.SenderID,
+			Messeage:  m.Messeage,
+			CreatedAt: m.CreatedAt.Unix(),
+		})
+	}
+	return &application.GetConversationMesseageResponse{
+		ConversationID: conversationID,
+		Messeages:      appMesseages,
+	}, nil
+}
