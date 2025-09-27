@@ -1,0 +1,33 @@
+package http
+
+import (
+	"backend-chat-app/internal/application/user"
+	"net/http"
+
+	"github.com/gin-gonic/gin"
+)
+
+type UserHandle struct {
+	userService user.UserService
+}
+
+func NewUserHandle(userSer *user.UserService) *UserHandle {
+	return &UserHandle{
+		userService: *userSer,
+	}
+}
+
+func (h *UserHandle) FindUserByPhone(c *gin.Context) {
+	var req user.FindUserByPhoneRequest
+	if err := c.ShouldBindBodyWithJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, FailResponse(nil, "Can not get register request data with err: "+err.Error()))
+		return
+	}
+
+	res, resErr := h.userService.FindUserByPhone(req)
+	if resErr != nil {
+		c.JSON(http.StatusBadRequest, FailResponse(nil, resErr.Error()))
+		return
+	}
+	c.JSON(http.StatusCreated, SuccessResponse(res, "Find user successful"))
+}

@@ -1,7 +1,8 @@
 package database
 
 import (
-	"backend-chat-app/internal/domain/auth"
+	auth "backend-chat-app/internal/domain/user"
+	"backend-chat-app/internal/infrastructure/database/registry"
 	"context"
 	"errors"
 	"time"
@@ -9,15 +10,45 @@ import (
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
+	"go.mongodb.org/mongo-driver/mongo/options"
 	"golang.org/x/crypto/bcrypt"
 )
+
+// Register indexes khi package được import
+func init() {
+	userIndexes := []mongo.IndexModel{
+		{
+			Keys:    bson.D{{Key: "username", Value: 1}},
+			Options: options.Index().SetUnique(true),
+		},
+		{
+			Keys:    bson.D{{Key: "email", Value: 1}},
+			Options: options.Index().SetUnique(true),
+		},
+		{
+			Keys:    bson.D{{Key: "refresh_token", Value: 1}},
+			Options: options.Index().SetUnique(true).SetSparse(true),
+		},
+		{
+			Keys:    bson.D{{Key: "phone", Value: 1}},
+			Options: options.Index().SetUnique(true),
+		},
+		{
+			Keys: bson.D{{Key: "create_at", Value: 1}},
+		},
+	}
+
+	registry.RegisterCollection("users", userIndexes)
+}
 
 type MongoUser struct {
 	ID                 primitive.ObjectID `bson:"_id,omitempty"`
 	Username           string             `bson:"username"`
 	Password           string             `bson:"password"`
 	Email              string             `bson:"email"`
+	Phone              string             `bson:"phone"`
 	Role               string             `bson:"role"`
+	Avatar             string             `bson:"avatar"`
 	RefreshToken       string             `bson:"refresh_token,omitempty"`
 	RefreshTokenExpiry int64              `bson:"refresh_token_expiry"`
 	CreateAt           int64              `bson:"create_at"`
@@ -48,6 +79,7 @@ func (mr *MongoUserRepository) Create(user auth.User) (*auth.User, error) {
 		Password: user.Password,
 		Email:    user.Email,
 		Role:     string(user.Role),
+		Phone:    user.Phone,
 		CreateAt: user.CreateAt.Unix(),
 		UpdateAt: user.UpdateAt.Unix(),
 	}
@@ -90,6 +122,7 @@ func (mr *MongoUserRepository) toDomainUser(mongoUser MongoUser) *auth.User {
 		Password:           mongoUser.Password,
 		Email:              mongoUser.Email,
 		Role:               auth.Role(mongoUser.Role),
+		Phone:              mongoUser.Phone,
 		RefreshToken:       mongoUser.RefreshToken,
 		RefreshTokenExpiry: mongoUser.RefreshTokenExpiry,
 		CreateAt:           timeFromUnix(mongoUser.CreateAt),
@@ -178,4 +211,19 @@ func (mr *MongoUserRepository) Logout(userID string) error {
 		return err
 	}
 	return nil
+}
+
+func (mr *MongoUserRepository) GetByPhone(phone string) (*auth.User, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+
+	var mongoUser MongoUser
+	err := mr.collection.FindOne(ctx, bson.M{"phone": phone}).Decode(&mongoUser)
+	if err == mongo.ErrNoDocuments {
+		return nil, nil
+	}
+	if err != nil {
+		return nil, err
+	}
+	return mr.toDomainUser(mongoUser), nil
 }

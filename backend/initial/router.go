@@ -2,8 +2,10 @@ package initial
 
 import (
 	"backend-chat-app/internal/application/auth"
+	"backend-chat-app/internal/application/user"
 	"backend-chat-app/internal/infrastructure/database"
 	"backend-chat-app/internal/interface/http"
+	"backend-chat-app/internal/interface/http/middleware"
 
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
@@ -14,17 +16,31 @@ func SetupRouter(r *gin.Engine, JWTSecret string, client *mongo.Client) *gin.Eng
 	userRepo := database.NewMongoUserRepository(client, "chat-app")
 
 	authService := auth.NewService(userRepo, JWTSecret)
+	userService := user.NewUserService(userRepo)
 
 	authHandle := http.NewAuthHandle(authService, JWTSecret)
+	userHandle := http.NewUserHandle(userService)
+
 	r.Use(cors.New(cors.Config{
 		AllowOrigins: []string{"http://localhost:3000"},
 		AllowMethods: []string{"POST", "PUT", "PATCH", "DELETE", "OPTIONS"},
 		AllowHeaders: []string{"Orign", "Content-Type", "Authorization"},
 	}))
 
-	r.POST("/auth/login", authHandle.Login)
-	r.POST("/auth/register", authHandle.Register)
-	r.POST("/auth/refresh", authHandle.RefreshToken)
-	r.POST("/auth/logout", authHandle.Logout)
+	authMiddleware := middleware.AuthMiddleware(*authService)
+
+	authGroup := r.Group("/auth")
+	{
+		authGroup.POST("/login", authHandle.Login)
+		authGroup.POST("/register", authHandle.Register)
+		authGroup.POST("/refresh", authHandle.RefreshToken)
+		authGroup.POST("/logout", authHandle.Logout)
+	}
+
+	userGroup := r.Group("/user")
+	userGroup.Use(authMiddleware)
+	{
+		userGroup.POST("/find-by-phone", userHandle.FindUserByPhone)
+	}
 	return r
 }
