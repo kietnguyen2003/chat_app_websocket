@@ -1,6 +1,7 @@
 package auth
 
 import (
+	"backend-chat-app/internal/application"
 	"backend-chat-app/internal/domain/user"
 	"crypto/rand"
 	"encoding/hex"
@@ -17,36 +18,6 @@ type Service struct {
 	jwtSecret string
 }
 
-type UserData struct {
-	ID   string `json:"user_id"`
-	Role string `json:"role"`
-}
-type TokenData struct {
-	AccessToken  string `json:"access_token"`
-	RefreshToken string `json:"refresh_token"`
-}
-
-type AuthResponse struct {
-	User  UserData  `json:"user"`
-	Token TokenData `json:"token"`
-}
-
-type LoginRequest struct {
-	Username string `json:"username"`
-	Password string `json:"password"`
-}
-type RegisterRequest struct {
-	Username string `json:"username"`
-	Password string `json:"password"`
-	Email    string `json:"email"`
-	Role     string `json:"role,omitempty"`
-	Phone    string `json:"phone"`
-}
-type RefreshTokenRequest struct {
-	UserId       string `json:"userID"`
-	RefreshToken string `json:"refresh_token"`
-}
-
 func NewService(userRepo user.UserRepository, jwtKeySecret string) *Service {
 	return &Service{
 		userRepo:  userRepo,
@@ -56,7 +27,7 @@ func NewService(userRepo user.UserRepository, jwtKeySecret string) *Service {
 
 // Login
 
-func (s *Service) Login(request LoginRequest) (*AuthResponse, error) {
+func (s *Service) Login(request application.LoginRequest) (*application.AuthResponse, error) {
 	user, err := s.userRepo.GetByUsername(request.Username)
 	if err != nil {
 		return nil, err
@@ -80,7 +51,7 @@ func (s *Service) Login(request LoginRequest) (*AuthResponse, error) {
 
 // Register
 
-func (s *Service) Register(request RegisterRequest) (*AuthResponse, error) {
+func (s *Service) Register(request application.RegisterRequest) (*application.AuthResponse, error) {
 	existingUser, err := s.userRepo.GetByUsername(request.Username)
 	if err != nil {
 		return nil, err
@@ -123,7 +94,7 @@ func (s *Service) Register(request RegisterRequest) (*AuthResponse, error) {
 
 // Refresh
 
-func (s *Service) RefreshToken(req RefreshTokenRequest) (*AuthResponse, error) {
+func (s *Service) RefreshToken(req application.RefreshTokenRequest) (*application.AuthResponse, error) {
 	user, err := s.userRepo.GetByID(req.UserId)
 	if err != nil {
 		return nil, err
@@ -146,7 +117,7 @@ func (s *Service) RefreshToken(req RefreshTokenRequest) (*AuthResponse, error) {
 
 // Logout
 
-func (s *Service) Logout(req RefreshTokenRequest) error {
+func (s *Service) Logout(req application.RefreshTokenRequest) error {
 	user, err := s.userRepo.GetByID(req.UserId)
 	if err != nil {
 		return err
@@ -167,13 +138,14 @@ func (s *Service) Logout(req RefreshTokenRequest) error {
 }
 
 // Helper functions
-func (s *Service) createAuthResponse(user *user.User, accessToken, refreshToken string) *AuthResponse {
-	return &AuthResponse{
-		User: UserData{
-			ID:   user.ID,
-			Role: string(user.Role),
+func (s *Service) createAuthResponse(user *user.User, accessToken, refreshToken string) *application.AuthResponse {
+	return &application.AuthResponse{
+		User: application.UserData{
+			ID:            user.ID,
+			Role:          string(user.Role),
+			Conversations: user.Conversations,
 		},
-		Token: TokenData{
+		Token: application.TokenData{
 			RefreshToken: refreshToken,
 			AccessToken:  accessToken,
 		},

@@ -14,7 +14,7 @@ func NewMongoConnection(mongoURI string) *mongo.Client {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
-	clientOptions := options.Client().ApplyURI(mongoURI)
+	clientOptions := options.Client().ApplyURI(mongoURI).SetServerSelectionTimeout(30 * time.Second).SetConnectTimeout(30 * time.Second)
 
 	client, err := mongo.Connect(ctx, clientOptions)
 	if err != nil {

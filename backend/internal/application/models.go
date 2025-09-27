@@ -1,0 +1,51 @@
+package application
+
+type UserData struct {
+	ID            string   `json:"user_id"`
+	Role          string   `json:"role"`
+	Conversations []string `json:"conversations"`
+}
+type TokenData struct {
+	AccessToken  string `json:"access_token"`
+	RefreshToken string `json:"refresh_token"`
+}
+
+type AuthResponse struct {
+	User  UserData  `json:"user"`
+	Token TokenData `json:"token"`
+}
+
+type LoginRequest struct {
+	Username string `json:"username"`
+	Password string `json:"password"`
+}
+type RegisterRequest struct {
+	Username string `json:"username"`
+	Password string `json:"password"`
+	Email    string `json:"email"`
+	Role     string `json:"role,omitempty"`
+	Phone    string `json:"phone"`
+}
+type RefreshTokenRequest struct {
+	UserId       string `json:"userID"`
+	RefreshToken string `json:"refresh_token"`
+}
+
+type FindUserByPhoneRequest struct {
+	Phone string `json:"phone"`
+}
+
+type FindUserByPhoneResponse struct {
+	Email  string `json:"email"`
+	Avatar string `json:"avatar"`
+	Phone  string `json:"phone"`
+}
+
+type CreateConversationRequest struct {
+	FriendPhone string `json:"friend_phone"`
+	MineID      string `json:"user_id"`
+}
+
+type CreateConversationResponse struct {
+	ID string `json:"conversation_id"`
+}

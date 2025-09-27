@@ -3,7 +3,6 @@ package database
 import (
 	auth "backend-chat-app/internal/domain/user"
 	"backend-chat-app/internal/infrastructure/database/registry"
-	"context"
 	"errors"
 	"time"
 
@@ -41,20 +40,6 @@ func init() {
 	registry.RegisterCollection("users", userIndexes)
 }
 
-type MongoUser struct {
-	ID                 primitive.ObjectID `bson:"_id,omitempty"`
-	Username           string             `bson:"username"`
-	Password           string             `bson:"password"`
-	Email              string             `bson:"email"`
-	Phone              string             `bson:"phone"`
-	Role               string             `bson:"role"`
-	Avatar             string             `bson:"avatar"`
-	RefreshToken       string             `bson:"refresh_token,omitempty"`
-	RefreshTokenExpiry int64              `bson:"refresh_token_expiry"`
-	CreateAt           int64              `bson:"create_at"`
-	UpdateAt           int64              `bson:"update_at"`
-}
-
 type MongoUserRepository struct {
 	client     *mongo.Client
 	database   string
@@ -71,17 +56,18 @@ func NewMongoUserRepository(client *mongo.Client, database string) *MongoUserRep
 }
 
 func (mr *MongoUserRepository) Create(user auth.User) (*auth.User, error) {
-	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	ctx, cancel := withContextTimeout()
 	defer cancel()
 
 	mongoUser := &MongoUser{
-		Username: user.Username,
-		Password: user.Password,
-		Email:    user.Email,
-		Role:     string(user.Role),
-		Phone:    user.Phone,
-		CreateAt: user.CreateAt.Unix(),
-		UpdateAt: user.UpdateAt.Unix(),
+		Username:      user.Username,
+		Password:      user.Password,
+		Email:         user.Email,
+		Role:          string(user.Role),
+		Phone:         user.Phone,
+		CreatedAt:     user.CreatedAt.Unix(),
+		UpdateAt:      user.UpdateAt.Unix(),
+		Conversations: []primitive.ObjectID{},
 	}
 
 	result, err := mr.collection.InsertOne(ctx, mongoUser)
@@ -96,7 +82,7 @@ func (mr *MongoUserRepository) Create(user auth.User) (*auth.User, error) {
 }
 
 func (mr *MongoUserRepository) GetByUsername(username string) (*auth.User, error) {
-	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	ctx, cancel := withContextTimeout()
 	defer cancel()
 
 	var mongoUser MongoUser
@@ -116,6 +102,12 @@ func (mr *MongoUserRepository) toDomainUser(mongoUser MongoUser) *auth.User {
 		userID = mongoUser.ID.Hex()
 	}
 
+	// Convert []primitive.ObjectID to []string
+	conversations := make([]string, len(mongoUser.Conversations))
+	for i, convID := range mongoUser.Conversations {
+		conversations[i] = convID.Hex()
+	}
+
 	return &auth.User{
 		ID:                 userID,
 		Username:           mongoUser.Username,
@@ -125,17 +117,14 @@ func (mr *MongoUserRepository) toDomainUser(mongoUser MongoUser) *auth.User {
 		Phone:              mongoUser.Phone,
 		RefreshToken:       mongoUser.RefreshToken,
 		RefreshTokenExpiry: mongoUser.RefreshTokenExpiry,
-		CreateAt:           timeFromUnix(mongoUser.CreateAt),
+		Conversations:      conversations,
+		CreatedAt:          timeFromUnix(mongoUser.CreatedAt),
 		UpdateAt:           timeFromUnix(mongoUser.UpdateAt),
 	}
 }
 
-func timeFromUnix(i int64) time.Time {
-	return time.Unix(i, 0)
-}
-
 func (mr *MongoUserRepository) SaveRefreshToken(token string, userID string) error {
-	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	ctx, cancel := withContextTimeout()
 	defer cancel()
 
 	hashToken, err := bcrypt.GenerateFromPassword([]byte(token), bcrypt.DefaultCost)
@@ -168,7 +157,7 @@ func (mr *MongoUserRepository) SaveRefreshToken(token string, userID string) err
 }
 
 func (mr *MongoUserRepository) GetByID(userID string) (*auth.User, error) {
-	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	ctx, cancel := withContextTimeout()
 	defer cancel()
 
 	objectID, err := primitive.ObjectIDFromHex(userID)
@@ -189,7 +178,7 @@ func (mr *MongoUserRepository) GetByID(userID string) (*auth.User, error) {
 }
 
 func (mr *MongoUserRepository) Logout(userID string) error {
-	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	ctx, cancel := withContextTimeout()
 	defer cancel()
 
 	objectID, err := primitive.ObjectIDFromHex(userID)
@@ -214,7 +203,7 @@ func (mr *MongoUserRepository) Logout(userID string) error {
 }
 
 func (mr *MongoUserRepository) GetByPhone(phone string) (*auth.User, error) {
-	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	ctx, cancel := withContextTimeout()
 	defer cancel()
 
 	var mongoUser MongoUser
@@ -226,4 +215,55 @@ func (mr *MongoUserRepository) GetByPhone(phone string) (*auth.User, error) {
 		return nil, err
 	}
 	return mr.toDomainUser(mongoUser), nil
+}
+
+func (mr *MongoUserRepository) AddConversationtoParticipants(mineID string, friendPhone string, conversationID string) error {
+	ctx, cancel := withContextTimeout()
+	defer cancel()
+
+	// Convert conversationID string to ObjectID
+	convObjID, err := primitive.ObjectIDFromHex(conversationID)
+	if err != nil {
+		return errors.New("Invalid conversation ID format: " + err.Error())
+	}
+
+	// Convert mineID string to ObjectID
+	mineObjID, err := primitive.ObjectIDFromHex(mineID)
+	if err != nil {
+		return errors.New("Invalid user ID format: " + err.Error())
+	}
+
+	// Update user1 by ID
+	filter1 := bson.M{"_id": mineObjID}
+	update1 := bson.M{
+		"$addToSet": bson.M{
+			"conversations": convObjID,
+		},
+		"$set": bson.M{
+			"update_at": time.Now().Unix(),
+		},
+	}
+
+	_, err = mr.collection.UpdateOne(ctx, filter1, update1)
+	if err != nil {
+		return errors.New("Error updating user1: " + err.Error())
+	}
+
+	// Update user2 by phone
+	filter2 := bson.M{"phone": friendPhone}
+	update2 := bson.M{
+		"$addToSet": bson.M{
+			"conversations": convObjID,
+		},
+		"$set": bson.M{
+			"update_at": time.Now().Unix(),
+		},
+	}
+
+	_, err = mr.collection.UpdateOne(ctx, filter2, update2)
+	if err != nil {
+		return errors.New("Error updating user2: " + err.Error())
+	}
+
+	return nil
 }

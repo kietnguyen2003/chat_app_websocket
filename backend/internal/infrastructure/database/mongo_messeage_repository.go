@@ -1,11 +1,12 @@
 package database
 
-import "go.mongodb.org/mongo-driver/bson/primitive"
+import "go.mongodb.org/mongo-driver/mongo"
 
-type MongoMesseage struct {
-	ID             primitive.ObjectID `bson:"_id,omitempty"`
-	ConversationID primitive.ObjectID `bson:""`
-	Sender         primitive.ObjectID `bson:""`
-	Messeage       string             `bson:""`
-	CreateAt       int64              `bson:""`
+func NewMongoMesseageRepository(client *mongo.Client, database string) *MongoMesseageRepository {
+	collection := client.Database(database).Collection("messeages")
+	return &MongoMesseageRepository{
+		client:     client,
+		database:   database,
+		collection: collection,
+	}
 }

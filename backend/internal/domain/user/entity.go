@@ -1,6 +1,9 @@
 package user
 
-import "time"
+import (
+	"errors"
+	"time"
+)
 
 // Role enum
 type Role string
@@ -26,6 +29,34 @@ type User struct {
 	Role               Role
 	RefreshToken       string
 	RefreshTokenExpiry int64
-	CreateAt           time.Time
+	Conversations      []string
+	CreatedAt          time.Time
 	UpdateAt           time.Time
+}
+
+func NewUser(username, password, email string, role Role, phone string) (*User, error) {
+	if username == "" {
+		return nil, errors.New("username can not empty")
+	}
+	if password == "" {
+		return nil, errors.New("password can not empty")
+	}
+	if email == "" {
+		return nil, errors.New("email can not empty")
+	}
+	if !ValidateRole(role) {
+		return nil, errors.New("invalid role")
+	}
+	if phone == "" {
+		return nil, errors.New("phone can not empty")
+	}
+	return &User{
+		Username:  username,
+		Password:  password,
+		Email:     email,
+		Role:      role,
+		Phone:     phone,
+		CreatedAt: time.Now(),
+		UpdateAt:  time.Now(),
+	}, nil
 }

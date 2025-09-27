@@ -1,6 +1,7 @@
 package http
 
 import (
+	"backend-chat-app/internal/application"
 	"backend-chat-app/internal/application/auth"
 	"net/http"
 
@@ -42,7 +43,7 @@ func NewAuthHandle(authSer *auth.Service, jwtKey string) *AuthHandle {
 }
 
 func (h *AuthHandle) Register(c *gin.Context) {
-	var req auth.RegisterRequest
+	var req application.RegisterRequest
 	if err := c.ShouldBindBodyWithJSON(&req); err != nil {
 		c.JSON(http.StatusBadRequest, FailResponse(nil, "Can not get register request data with err: "+err.Error()))
 		return
@@ -57,7 +58,7 @@ func (h *AuthHandle) Register(c *gin.Context) {
 }
 
 func (h *AuthHandle) Login(c *gin.Context) {
-	var req auth.LoginRequest
+	var req application.LoginRequest
 	if err := c.ShouldBindBodyWithJSON(&req); err != nil {
 		c.JSON(http.StatusBadRequest, FailResponse(nil, "Can not get Login request data"))
 		return
@@ -73,7 +74,7 @@ func (h *AuthHandle) Login(c *gin.Context) {
 }
 
 func (h *AuthHandle) RefreshToken(c *gin.Context) {
-	var req auth.RefreshTokenRequest
+	var req application.RefreshTokenRequest
 	if err := c.ShouldBindBodyWithJSON(&req); err != nil {
 		c.JSON(http.StatusBadRequest, FailResponse(nil, "Can not get Refresh request data with err: "+err.Error()))
 		return
@@ -87,7 +88,7 @@ func (h *AuthHandle) RefreshToken(c *gin.Context) {
 }
 
 func (h *AuthHandle) Logout(c *gin.Context) {
-	var req auth.RefreshTokenRequest
+	var req application.RefreshTokenRequest
 	if err := c.ShouldBindBodyWithJSON(&req); err != nil {
 		c.JSON(http.StatusBadRequest, FailResponse(nil, "Can not get Logout request data with err: "+err.Error()))
 		return

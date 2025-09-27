@@ -1,6 +1,7 @@
 package http
 
 import (
+	"backend-chat-app/internal/application"
 	"backend-chat-app/internal/application/user"
 	"net/http"
 
@@ -18,12 +19,11 @@ func NewUserHandle(userSer *user.UserService) *UserHandle {
 }
 
 func (h *UserHandle) FindUserByPhone(c *gin.Context) {
-	var req user.FindUserByPhoneRequest
+	var req application.FindUserByPhoneRequest
 	if err := c.ShouldBindBodyWithJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, FailResponse(nil, "Can not get register request data with err: "+err.Error()))
+		c.JSON(http.StatusBadRequest, FailResponse(nil, "Can not get FindUserByPhone request data with err: "+err.Error()))
 		return
 	}
-
 	res, resErr := h.userService.FindUserByPhone(req)
 	if resErr != nil {
 		c.JSON(http.StatusBadRequest, FailResponse(nil, resErr.Error()))
