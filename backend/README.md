@@ -1,15 +1,19 @@
 # Chat App Backend
 
-A robust Go-based REST API backend for a chat application with user authentication, built using clean architecture principles.
+A robust Go-based REST API backend for a real-time chat application with user authentication, conversation management, and messaging system, built using clean architecture principles.
 
 ## 🚀 Features
 
 - **User Authentication**: Complete auth system with JWT tokens
+- **Real-time Messaging**: Send and receive messages in conversations
+- **Conversation Management**: Create and manage chat conversations
+- **User Discovery**: Find users by phone number
 - **Clean Architecture**: Domain-driven design with clear separation of concerns
 - **MongoDB Integration**: NoSQL database for scalable data storage
 - **CORS Support**: Cross-origin resource sharing for frontend integration
 - **Secure Password Handling**: bcrypt encryption for user passwords
 - **JWT Token Management**: Access and refresh token system
+- **Registry Pattern**: Centralized MongoDB collection management
 
 ## 🛠 Tech Stack
 
@@ -26,24 +30,46 @@ A robust Go-based REST API backend for a chat application with user authenticati
 backend/
 ├── cmd/
 │   └── main.go                 # Application entry point
-├── init/
+├── initial/
 │   ├── config.go              # Configuration management
 │   ├── dbconnect.go           # Database connection setup
-│   └── router.go              # Route definitions
+│   └── router.go              # Route definitions and dependency injection
 ├── internal/
 │   ├── application/
-│   │   └── auth/
-│   │       └── auth.go        # Authentication business logic
+│   │   ├── auth/
+│   │   │   └── auth.go        # Authentication business logic
+│   │   ├── chat/
+│   │   │   └── chat.go        # Chat business logic
+│   │   ├── user/
+│   │   │   └── user.go        # User business logic
+│   │   └── models.go          # Application DTOs and models
 │   ├── domain/
-│   │   └── auth/
-│   │       └── auth.go        # Domain entities and interfaces
+│   │   ├── conversation/
+│   │   │   ├── conversation.go # Conversation domain logic
+│   │   │   └── entity.go      # Conversation entities
+│   │   ├── messeage/
+│   │   │   ├── messeage.go    # Message domain logic
+│   │   │   └── entity.go      # Message entities
+│   │   └── user/
+│   │       ├── user.go        # User domain logic
+│   │       └── entity.go      # User entities
 │   ├── infrastructure/
 │   │   └── database/
-│   │       └── mongo_user_repository.go  # Database implementation
+│   │       ├── base.go        # Base database utilities
+│   │       ├── models.go      # MongoDB models
+│   │       ├── registry/
+│   │       │   └── registry.go # Collection registry pattern
+│   │       ├── mongo_user_repository.go
+│   │       ├── mongo_conversation_repository.go
+│   │       └── mongo_messeage_repository.go
 │   └── interface/
 │       └── http/
-│           └── auth_handle.go # HTTP handlers
+│           ├── auth_handle.go # Authentication HTTP handlers
+│           ├── chat_handle.go # Chat HTTP handlers
+│           ├── user_handle.go # User HTTP handlers
+│           └── middleware/    # HTTP middlewares
 ├── .env                       # Environment variables
+├── .gitignore                 # Git ignore rules
 ├── go.mod                     # Go module dependencies
 └── go.sum                     # Go module checksums
 ```
@@ -208,6 +234,106 @@ The server will start on `http://localhost:8080`
 }
 ```
 
+### User Endpoints
+
+#### Find User by Phone
+- **Endpoint**: `POST /user/find-by-phone`
+- **Description**: Find a user by their phone number
+- **Headers**: `Authorization: Bearer <access_token>`
+
+**Request Body**:
+```json
+{
+  "phone": "string"
+}
+```
+
+**Success Response** (200):
+```json
+{
+  "status": "success",
+  "message": "User found",
+  "data": {
+    "user_id": "string",
+    "username": "string",
+    "phone": "string"
+  }
+}
+```
+
+### Chat Endpoints
+
+#### Create Conversation
+- **Endpoint**: `POST /chat/conversation`
+- **Description**: Create a new conversation between users
+- **Headers**: `Authorization: Bearer <access_token>`
+
+**Request Body**:
+```json
+{
+  "friend_phone": "string"
+}
+```
+
+**Success Response** (201):
+```json
+{
+  "status": "success",
+  "message": "Conversation created successfully",
+  "data": {
+    "id": "conversation_id_string"
+  }
+}
+```
+
+#### Send Message
+- **Endpoint**: `POST /chat/send`
+- **Description**: Send a message in a conversation
+- **Headers**: `Authorization: Bearer <access_token>`
+
+**Request Body**:
+```json
+{
+  "conversation_id": "string",
+  "messeage": "string"
+}
+```
+
+**Success Response** (201):
+```json
+{
+  "status": "success",
+  "message": "Message sent successfully",
+  "data": {
+    "messeage": "string",
+    "created_at": 1234567890
+  }
+}
+```
+
+#### Get Conversation Messages
+- **Endpoint**: `GET /chat/conversation/:id`
+- **Description**: Get all messages in a conversation
+- **Headers**: `Authorization: Bearer <access_token>`
+
+**Success Response** (200):
+```json
+{
+  "status": "success",
+  "message": "Messages retrieved successfully",
+  "data": {
+    "conversation_id": "string",
+    "messeages": [
+      {
+        "sender_id": "string",
+        "messeage": "string",
+        "created_at": 1234567890
+      }
+    ]
+  }
+}
+```
+
 ## 🏗 Architecture
 
 This project follows **Clean Architecture** principles:
@@ -234,11 +360,34 @@ This project follows **Clean Architecture** principles:
   "username": "string",
   "password": "string", // bcrypt hashed
   "email": "string",
+  "phone": "string",
   "role": "user|admin",
   "refresh_token": "string", // bcrypt hashed
   "refresh_token_expiry": "int64",
+  "conversations": ["ObjectId"], // Array of conversation IDs
   "created_at": "timestamp",
   "updated_at": "timestamp"
+}
+```
+
+### Conversation Collection
+```json
+{
+  "_id": "ObjectId",
+  "participants": ["ObjectId"], // Array of user IDs
+  "created_at": "timestamp",
+  "updated_at": "timestamp"
+}
+```
+
+### Message Collection
+```json
+{
+  "_id": "ObjectId",
+  "conversation_id": "ObjectId",
+  "sender": "ObjectId", // User ID who sent the message
+  "messeage": "string", // Message content
+  "created_at": "timestamp"
 }
 ```
 
@@ -266,23 +415,46 @@ Example curl commands:
 # Register
 curl -X POST http://localhost:8080/auth/register \
   -H "Content-Type: application/json" \
-  -d '{"username":"testuser","password":"password123","email":"test@example.com"}'
+  -d '{"username":"testuser","password":"password123","email":"test@example.com","phone":"1234567890"}'
 
 # Login
 curl -X POST http://localhost:8080/auth/login \
   -H "Content-Type: application/json" \
   -d '{"username":"testuser","password":"password123"}'
+
+# Find user by phone (requires authentication)
+curl -X POST http://localhost:8080/user/find-by-phone \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer <your-access-token>" \
+  -d '{"phone":"1234567890"}'
+
+# Create conversation (requires authentication)
+curl -X POST http://localhost:8080/chat/conversation \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer <your-access-token>" \
+  -d '{"friend_phone":"0987654321"}'
+
+# Send message (requires authentication)
+curl -X POST http://localhost:8080/chat/send \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer <your-access-token>" \
+  -d '{"conversation_id":"your-conversation-id","messeage":"Hello, how are you?"}'
+
+# Get conversation messages (requires authentication)
+curl -X GET http://localhost:8080/chat/conversation/your-conversation-id \
+  -H "Authorization: Bearer <your-access-token>"
 ```
 
 ## 📝 Development
 
 ### Adding New Features
 
-1. Define domain entities in `internal/domain/`
-2. Create business logic in `internal/application/`
-3. Implement database layer in `internal/infrastructure/`
-4. Add HTTP handlers in `internal/interface/`
-5. Register routes in `init/router.go`
+1. Define domain entities and interfaces in `internal/domain/[feature]/`
+2. Create business logic and use cases in `internal/application/[feature]/`
+3. Implement database repositories in `internal/infrastructure/database/`
+4. Add HTTP handlers in `internal/interface/http/`
+5. Register routes and dependency injection in `initial/router.go`
+6. Update models and DTOs in `internal/application/models.go`
 
 ### Code Style
 
