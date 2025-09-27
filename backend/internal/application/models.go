@@ -49,3 +49,14 @@ type CreateConversationRequest struct {
 type CreateConversationResponse struct {
 	ID string `json:"conversation_id"`
 }
+
+type SendMesseageRequest struct {
+	Messeage       string `json:"messeage"`
+	ConversationID string `json:"conversation_id"`
+	SenderID       string `json:"sender_id"`
+}
+
+type SendMesseageResponse struct {
+	Messeage  string `json:"messeage"`
+	CreatedAt int64  `json:"created_at"`
+}

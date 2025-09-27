@@ -51,7 +51,7 @@ func SetupRouter(r *gin.Engine, JWTSecret string, client *mongo.Client) *gin.Eng
 	chatGroup := r.Group("/chat")
 	chatGroup.Use(authMiddleware)
 	{
-		// chatGroup.POST("/send", chatHandle.sendMesseage)
+		chatGroup.POST("/send", chatHandle.SendMesseage)
 		chatGroup.POST("/conversation", chatHandle.CreateConversation)
 	}
 	return r

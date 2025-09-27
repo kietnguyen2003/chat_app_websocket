@@ -2,7 +2,6 @@ package database
 
 import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
-	"go.mongodb.org/mongo-driver/mongo"
 )
 
 // User table
@@ -28,12 +27,6 @@ type MongoMesseage struct {
 	Sender         primitive.ObjectID `bson:"sender_id"`
 	Messeage       string             `bson:"messeage"`
 	CreatedAt      int64              `bson:"created_at"`
-}
-
-type MongoMesseageRepository struct {
-	client     *mongo.Client
-	database   string
-	collection *mongo.Collection
 }
 
 // Conversation Table
