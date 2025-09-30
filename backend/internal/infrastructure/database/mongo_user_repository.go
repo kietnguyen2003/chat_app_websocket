@@ -267,3 +267,37 @@ func (mr *MongoUserRepository) AddConversationtoParticipants(mineID string, frie
 
 	return nil
 }
+
+func (mr *MongoUserRepository) GetConversationList(userID string) ([]*string, error) {
+	ctx, cancel := withContextTimeout()
+	defer cancel()
+
+	mineObjID, err := primitive.ObjectIDFromHex(userID)
+	if err != nil {
+		return nil, errors.New("Invalid user ID format: " + err.Error())
+	}
+
+	var mongoUser MongoUser
+	filter := bson.M{"_id": mineObjID}
+	err = mr.collection.FindOne(ctx, filter).Decode(&mongoUser)
+	if err == mongo.ErrNoDocuments {
+		return nil, nil
+	}
+	if err != nil {
+		return nil, err
+	}
+
+	// Convert []primitive.ObjectID to []string
+	conversationIDs := make([]string, len(mongoUser.Conversations))
+	for i, convID := range mongoUser.Conversations {
+		conversationIDs[i] = convID.Hex()
+	}
+
+	// Convert []string to []*string
+	conversationIDPtrs := make([]*string, len(conversationIDs))
+	for i := range conversationIDs {
+		conversationIDPtrs[i] = &conversationIDs[i]
+	}
+
+	return conversationIDPtrs, nil
+}

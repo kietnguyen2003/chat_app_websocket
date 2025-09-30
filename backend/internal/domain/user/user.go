@@ -6,6 +6,7 @@ type UserRepository interface {
 	GetByUsername(username string) (*User, error)
 	GetByID(userId string) (*User, error)
 	GetByPhone(phone string) (*User, error)
+	GetConversationList(userID string) ([]*string, error)
 
 	SaveRefreshToken(token string, userID string) error
 	Logout(userID string) error

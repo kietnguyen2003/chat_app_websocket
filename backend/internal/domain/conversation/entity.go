@@ -4,15 +4,22 @@ import (
 	"time"
 )
 
-type Conversation struct {
-	ID        string
-	CreatedAt time.Time
-	UpdateAt  time.Time
+type Participant struct {
+	ID   string
+	Name string
 }
 
-func NewConversation() (*Conversation, error) {
+type Conversation struct {
+	ID          string
+	Participant []Participant
+	CreatedAt   time.Time
+	UpdateAt    time.Time
+}
+
+func NewConversation(participants []Participant) (*Conversation, error) {
 	return &Conversation{
-		CreatedAt: time.Now(),
-		UpdateAt:  time.Now(),
+		Participant: participants,
+		CreatedAt:   time.Now(),
+		UpdateAt:    time.Now(),
 	}, nil
 }

@@ -30,8 +30,14 @@ type MongoMesseage struct {
 }
 
 // Conversation Table
+type Participant struct {
+	ID   primitive.ObjectID `bson:"_id,omitempty"`
+	Name string             `bson:"name"`
+}
+
 type MongoConversation struct {
-	ID        primitive.ObjectID `bson:"_id,omitempty"`
-	CreatedAt int64              `bson:"created_at"`
-	UpdateAt  int64              `bson:"update_at"`
+	ID          primitive.ObjectID `bson:"_id,omitempty"`
+	Participant []Participant      `bson:"participant"`
+	CreatedAt   int64              `bson:"created_at"`
+	UpdateAt    int64              `bson:"update_at"`
 }

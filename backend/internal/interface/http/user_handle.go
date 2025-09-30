@@ -31,3 +31,22 @@ func (h *UserHandle) FindUserByPhone(c *gin.Context) {
 	}
 	c.JSON(http.StatusCreated, SuccessResponse(res, "Find user successful"))
 }
+
+func (h *UserHandle) GetConversationList(c *gin.Context) {
+	userId, exists := c.Get("user_id")
+	if !exists {
+		c.JSON(http.StatusBadRequest, FailResponse(nil, "Require UserID"))
+		return
+	}
+	userIdStr, ok := userId.(string)
+	if !ok {
+		c.JSON(http.StatusInternalServerError, FailResponse(nil, "Invalid user ID format"))
+		return
+	}
+	res, err := h.userService.GetConversationList(userIdStr)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, FailResponse(nil, "Failed to get conversation list: "+err.Error()))
+		return
+	}
+	c.JSON(http.StatusOK, SuccessResponse(res, "Conversation list retrieved successfully"))
+}

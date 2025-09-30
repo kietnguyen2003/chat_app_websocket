@@ -70,3 +70,12 @@ type GetConversationMesseageResponse struct {
 	ConversationID string     `json:"conversation_id"`
 	Messeages      []Messeage `json:"messeages"`
 }
+
+type Conversation struct {
+	ID          string   `json:"conversation_id"`
+	Participant []string `json:"participant"`
+}
+
+type GetConversationListResponse struct {
+	ConversationLists []Conversation `json:"conversation_list"`
+}

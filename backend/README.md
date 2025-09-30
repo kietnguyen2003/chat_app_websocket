@@ -4,15 +4,16 @@ A robust Go-based REST API backend for a real-time chat application with user au
 
 ## 🚀 Features
 
-- **User Authentication**: Complete auth system with JWT tokens
+- **User Authentication**: Complete auth system with JWT tokens (login, register, refresh, logout)
 - **Real-time Messaging**: Send and receive messages in conversations
-- **Conversation Management**: Create and manage chat conversations
+- **Conversation Management**: Create conversations with participants tracking
 - **User Discovery**: Find users by phone number
+- **Conversation List**: Retrieve all conversations with participant names
 - **Clean Architecture**: Domain-driven design with clear separation of concerns
 - **MongoDB Integration**: NoSQL database for scalable data storage
 - **CORS Support**: Cross-origin resource sharing for frontend integration
 - **Secure Password Handling**: bcrypt encryption for user passwords
-- **JWT Token Management**: Access and refresh token system
+- **JWT Token Management**: Access and refresh token system with 24-hour expiration
 - **Registry Pattern**: Centralized MongoDB collection management
 
 ## 🛠 Tech Stack
@@ -110,7 +111,19 @@ The server will start on `http://localhost:8080`
 
 ## 📡 API Endpoints
 
+All API endpoints return responses in the following format:
+
+```json
+{
+  "status": "success" | "fail",
+  "message": "string",
+  "data": object | null
+}
+```
+
 ### Authentication Endpoints
+
+All authentication endpoints are public (no authentication required).
 
 #### Register User
 - **Endpoint**: `POST /auth/register`
@@ -122,6 +135,7 @@ The server will start on `http://localhost:8080`
   "username": "string",
   "password": "string",
   "email": "string",
+  "phone": "string",
   "role": "user" // optional, defaults to "user", can be "admin"
 }
 ```
@@ -236,6 +250,8 @@ The server will start on `http://localhost:8080`
 
 ### User Endpoints
 
+All user endpoints require authentication via Bearer token in the Authorization header.
+
 #### Find User by Phone
 - **Endpoint**: `POST /user/find-by-phone`
 - **Description**: Find a user by their phone number
@@ -254,14 +270,42 @@ The server will start on `http://localhost:8080`
   "status": "success",
   "message": "User found",
   "data": {
-    "user_id": "string",
-    "username": "string",
+    "email": "string",
+    "avatar": "string",
     "phone": "string"
   }
 }
 ```
 
+#### Get Conversation List
+- **Endpoint**: `GET /user/conversation`
+- **Description**: Get all conversations with participants for the authenticated user
+- **Headers**: `Authorization: Bearer <access_token>`
+
+**Request Body**: None (GET request)
+
+**Success Response** (200):
+```json
+{
+  "status": "success",
+  "message": "Conversation list retrieved successfully",
+  "data": {
+    "conversation_list": [
+      {
+        "conversation_id": "string",
+        "participant": ["username1", "username2"]
+      }
+    ]
+  }
+}
+```
+
+**Note**: Each conversation includes the conversation ID and an array of participant usernames.
+
+
 ### Chat Endpoints
+
+All chat endpoints require authentication via Bearer token in the Authorization header.
 
 #### Create Conversation
 - **Endpoint**: `POST /chat/conversation`
@@ -281,10 +325,12 @@ The server will start on `http://localhost:8080`
   "status": "success",
   "message": "Conversation created successfully",
   "data": {
-    "id": "conversation_id_string"
+    "conversation_id": "string"
   }
 }
 ```
+
+**Note**: The conversation will automatically include both participants (current user and friend) with their IDs and usernames stored in the database.
 
 #### Send Message
 - **Endpoint**: `POST /chat/send`
@@ -374,9 +420,14 @@ This project follows **Clean Architecture** principles:
 ```json
 {
   "_id": "ObjectId",
-  "participants": ["ObjectId"], // Array of user IDs
+  "participant": [
+    {
+      "_id": "ObjectId", // User ID
+      "name": "string"   // Username
+    }
+  ],
   "created_at": "timestamp",
-  "updated_at": "timestamp"
+  "update_at": "timestamp"
 }
 ```
 
@@ -412,40 +463,71 @@ To test the API endpoints, you can use tools like:
 Example curl commands:
 
 ```bash
-# Register
+# Register a new user
 curl -X POST http://localhost:8080/auth/register \
   -H "Content-Type: application/json" \
-  -d '{"username":"testuser","password":"password123","email":"test@example.com","phone":"1234567890"}'
+  -d '{"username":"john_doe","password":"secure123","email":"john@example.com","phone":"0123456789"}'
 
-# Login
+# Login with credentials
 curl -X POST http://localhost:8080/auth/login \
   -H "Content-Type: application/json" \
-  -d '{"username":"testuser","password":"password123"}'
+  -d '{"username":"john_doe","password":"secure123"}'
 
-# Find user by phone (requires authentication)
+# Refresh access token
+curl -X POST http://localhost:8080/auth/refresh \
+  -H "Content-Type: application/json" \
+  -d '{"userID":"user_id_from_login","refresh_token":"refresh_token_from_login"}'
+
+# Logout
+curl -X POST http://localhost:8080/auth/logout \
+  -H "Content-Type: application/json" \
+  -d '{"userID":"user_id","refresh_token":"refresh_token"}'
+
+# Find user by phone number (requires authentication)
 curl -X POST http://localhost:8080/user/find-by-phone \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer <your-access-token>" \
-  -d '{"phone":"1234567890"}'
+  -d '{"phone":"0987654321"}'
 
-# Create conversation (requires authentication)
+# Get all conversations with participants (requires authentication)
+curl -X GET http://localhost:8080/user/conversation \
+  -H "Authorization: Bearer <your-access-token>"
+
+# Create a new conversation (requires authentication)
 curl -X POST http://localhost:8080/chat/conversation \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer <your-access-token>" \
   -d '{"friend_phone":"0987654321"}'
 
-# Send message (requires authentication)
+# Send a message in a conversation (requires authentication)
 curl -X POST http://localhost:8080/chat/send \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer <your-access-token>" \
-  -d '{"conversation_id":"your-conversation-id","messeage":"Hello, how are you?"}'
+  -d '{"conversation_id":"65f1a2b3c4d5e6f7g8h9i0j1","messeage":"Hello, how are you?"}'
 
-# Get conversation messages (requires authentication)
-curl -X GET http://localhost:8080/chat/conversation/your-conversation-id \
+# Get all messages in a conversation (requires authentication)
+curl -X GET http://localhost:8080/chat/conversation/65f1a2b3c4d5e6f7g8h9i0j1 \
   -H "Authorization: Bearer <your-access-token>"
 ```
 
 ## 📝 Development
+
+### API Workflow
+
+**1. Authentication Flow:**
+```
+Register → Login → Get Access Token → Use Token for API calls → Refresh when expired → Logout
+```
+
+**2. Chat Flow:**
+```
+Login → Find User by Phone → Create Conversation → Send Messages → Get Messages
+```
+
+**3. Conversation List Flow:**
+```
+Login → Get Conversation List (with participants) → Select Conversation → Get Messages
+```
 
 ### Adding New Features
 
@@ -458,10 +540,11 @@ curl -X GET http://localhost:8080/chat/conversation/your-conversation-id \
 
 ### Code Style
 
-- Follow Go conventions
+- Follow Go conventions and idiomatic patterns
 - Use meaningful variable names
-- Add error handling for all operations
-- Validate input data
+- Add comprehensive error handling for all operations
+- Validate and sanitize all input data
+- Write clear comments for complex logic
 
 ## 🚀 Deployment
 

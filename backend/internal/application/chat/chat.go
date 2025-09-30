@@ -24,20 +24,50 @@ func NewChatService(messeageRepo messeage.MesseageRepository, conversationRepo c
 }
 
 func (s *ChatService) CreateConversation(req application.CreateConversationRequest) (*application.CreateConversationResponse, error) {
-	conversation, err := conversation.NewConversation()
+	currentUser, err := s.userRepo.GetByID(req.MineID)
+	if err != nil {
+		return nil, errors.New("failed to get current user: " + err.Error())
+	}
+	if currentUser == nil {
+		return nil, errors.New("current user not found")
+	}
+
+	friendUser, err := s.userRepo.GetByPhone(req.FriendPhone)
+	if err != nil {
+		return nil, errors.New("failed to get friend user: " + err.Error())
+	}
+	if friendUser == nil {
+		return nil, errors.New("friend user not found")
+	}
+
+	participants := []conversation.Participant{
+		{
+			ID:   currentUser.ID,
+			Name: currentUser.Username,
+		},
+		{
+			ID:   friendUser.ID,
+			Name: friendUser.Username,
+		},
+	}
+
+	newConversation, err := conversation.NewConversation(participants)
 	if err != nil {
 		return nil, err
 	}
 
-	res, err := s.conversationRepo.Create(*conversation)
+	res, err := s.conversationRepo.Create(*newConversation)
 	if err != nil {
 		return nil, err
 	}
+
+	// Add conversation ID vào cả 2 users
 	err = s.userRepo.AddConversationtoParticipants(req.MineID, req.FriendPhone, res.ID)
 	if err != nil {
 		return nil, err
 	}
-	fmt.Println("Create conversation successfullt!!")
+
+	fmt.Println("Create conversation successfully!!")
 	return &application.CreateConversationResponse{
 		ID: res.ID,
 	}, nil

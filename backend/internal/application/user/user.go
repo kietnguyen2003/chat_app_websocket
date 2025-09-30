@@ -2,17 +2,20 @@ package user
 
 import (
 	"backend-chat-app/internal/application"
+	"backend-chat-app/internal/domain/conversation"
 	"backend-chat-app/internal/domain/user"
 	"errors"
 )
 
 type UserService struct {
-	userRepo user.UserRepository
+	userRepo         user.UserRepository
+	conversationRepo conversation.ConversationRepository
 }
 
-func NewUserService(userRepository user.UserRepository) *UserService {
+func NewUserService(userRepository user.UserRepository, conversationRepo conversation.ConversationRepository) *UserService {
 	return &UserService{
-		userRepo: userRepository,
+		userRepo:         userRepository,
+		conversationRepo: conversationRepo,
 	}
 }
 
@@ -29,4 +32,37 @@ func (us *UserService) FindUserByPhone(request application.FindUserByPhoneReques
 		Avatar: user.Avatar,
 		Phone:  user.Phone,
 	}, nil
+}
+
+func (us *UserService) GetConversationList(userID string) (*application.GetConversationListResponse, error) {
+	conversations, err := us.userRepo.GetConversationList(userID)
+	if err != nil {
+		return nil, err
+	}
+	if conversations == nil {
+		return nil, errors.New("doesnt have any conversation")
+	}
+	var response application.GetConversationListResponse
+	for _, conversationID := range conversations {
+		if conversationID == nil {
+			continue
+		}
+		res, err := us.conversationRepo.GetByID(*conversationID)
+		if err != nil {
+			return nil, err
+		}
+		if res == nil {
+			continue
+		}
+		participantIDs := make([]string, 0, len(res.Participant))
+		for _, p := range res.Participant {
+			participantIDs = append(participantIDs, p.Name)
+		}
+		conversationModel := application.Conversation{
+			ID:          res.ID,
+			Participant: participantIDs,
+		}
+		response.ConversationLists = append(response.ConversationLists, conversationModel)
+	}
+	return &response, nil
 }
