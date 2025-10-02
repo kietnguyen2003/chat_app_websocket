@@ -14,7 +14,7 @@ import (
 	"go.mongodb.org/mongo-driver/mongo"
 )
 
-func SetupRouter(r *gin.Engine, JWTSecret string, client *mongo.Client) *gin.Engine {
+func SetupRouter(r *gin.Engine, JWTSecret string, client *mongo.Client) (*gin.Engine, *ws.Hub) {
 	hub := ws.NewHub()
 
 	userRepo := database.NewMongoUserRepository(client, "chat-app")
@@ -32,9 +32,11 @@ func SetupRouter(r *gin.Engine, JWTSecret string, client *mongo.Client) *gin.Eng
 	wsHandle := http.NewWebSocketHandle(hub, chatService)
 
 	r.Use(cors.New(cors.Config{
-		AllowOrigins: []string{"http://localhost:3000"},
-		AllowMethods: []string{"POST", "PUT", "PATCH", "DELETE", "OPTIONS"},
-		AllowHeaders: []string{"Orign", "Content-Type", "Authorization"},
+		AllowOrigins:     []string{"http://localhost:3000", "http://localhost:5173"},
+		AllowMethods:     []string{"GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"},
+		AllowHeaders:     []string{"Origin", "Content-Type", "Authorization"},
+		AllowCredentials: true,
+		AllowWebSockets:  true,
 	}))
 
 	authMiddleware := middleware.AuthMiddleware(*authService)
@@ -63,5 +65,5 @@ func SetupRouter(r *gin.Engine, JWTSecret string, client *mongo.Client) *gin.Eng
 		chatGroup.GET("/conversation/:id", chatHandle.GetConversation)
 		chatGroup.GET("/ws", wsHandle.HandleWebSocket)
 	}
-	return r
+	return r, hub
 }

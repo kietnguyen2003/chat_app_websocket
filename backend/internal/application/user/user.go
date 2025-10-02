@@ -54,13 +54,16 @@ func (us *UserService) GetConversationList(userID string) (*application.GetConve
 		if res == nil {
 			continue
 		}
-		participantIDs := make([]string, 0, len(res.Participant))
+		participants := make([]application.ParticipantInfo, 0, len(res.Participant))
 		for _, p := range res.Participant {
-			participantIDs = append(participantIDs, p.Name)
+			participants = append(participants, application.ParticipantInfo{
+				ID:   p.ID,
+				Name: p.Name,
+			})
 		}
 		conversationModel := application.Conversation{
 			ID:          res.ID,
-			Participant: participantIDs,
+			Participant: participants,
 		}
 		response.ConversationLists = append(response.ConversationLists, conversationModel)
 	}

@@ -1,6 +1,7 @@
 package http
 
 import (
+	"backend-chat-app/internal/application"
 	"backend-chat-app/internal/application/chat"
 	ws "backend-chat-app/internal/infrastructure/websocket"
 	"encoding/json"
@@ -97,8 +98,16 @@ func (h *WebSocketHandle) readPump(client *ws.Client) {
 		switch msg.Type {
 		case "join_conversation":
 			h.hub.JoinConversation(msg.ConversationID, client.ID)
-
 		case "new_message":
+			req := &application.SendMesseageRequest{
+				ConversationID: msg.ConversationID,
+				SenderID:       msg.SenderID,
+				Messeage:       msg.Messeage,
+			}
+			_, err := h.chatService.SendMesseage(*req)
+			if err != nil {
+				log.Printf("Failed to save messeage to DB: %v", err)
+			}
 			h.hub.Broadcast <- &msg
 		}
 	}

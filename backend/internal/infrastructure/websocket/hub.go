@@ -1,12 +1,14 @@
 package websocket
 
 import (
+	"encoding/json"
+	"log"
 	"sync"
+	"time"
 
 	"github.com/gorilla/websocket"
 )
 
-// đại diện cho 1 user
 type Client struct {
 	ID   string
 	Conn *websocket.Conn
@@ -15,7 +17,7 @@ type Client struct {
 }
 
 type Hub struct {
-	Clients       map[string]*Client // danh sách các client kết nối
+	Clients       map[string]*Client
 	Conversations map[string]map[string]bool
 	Register      chan *Client
 	Unregister    chan *Client
@@ -37,24 +39,78 @@ func NewHub() *Hub {
 		Conversations: make(map[string]map[string]bool),
 		Register:      make(chan *Client),
 		Unregister:    make(chan *Client),
-		Broadcast:     make(chan *Message, 256), // khai báo buffer bằng 256 vì kênh này hoạt động nhiều, tránh tính trạng treo
+		Broadcast:     make(chan *Message, 256),
 	}
 }
 
 func (h *Hub) Run() {
 	for {
 		select {
-		case client := <-h.Register: // user kết nối với websocket
-			h.mu.Lock()                   // đóng
-			h.Clients[client.ID] = client // lưu vào danh sách kết nối
-			h.mu.Unlock()                 // mở  lock
-		case client := <-h.Unregister: // user ngắt kết nối với websocket
-			h.mu.Lock()                            // đóng
-			if _, ok := h.Clients[client.ID]; ok { // kiểm tra xem có client trong danh sách kn không
-				delete(h.Clients, client.ID) // có thì xóa
-				close(client.Send)           // đóng kết nối client với hub
+		case client := <-h.Register:
+			h.mu.Lock()
+
+			onlineUsersList := make([]string, 0, len(h.Clients))
+			for userID := range h.Clients {
+				onlineUsersList = append(onlineUsersList, userID)
 			}
-			h.mu.Unlock() // mở lock
+
+			h.Clients[client.ID] = client
+			h.mu.Unlock()
+
+			// Gửi danh sách online users cho client mới
+			for _, userID := range onlineUsersList {
+				onlineNotif := Message{
+					Type:      "user_online",
+					SenderID:  userID,
+					CreatedAt: time.Now().Unix(),
+				}
+				onlineNotifJSON, _ := json.Marshal(onlineNotif)
+				select {
+				case client.Send <- onlineNotifJSON:
+				default:
+				}
+			}
+
+			// Broadcast cho TẤT CẢ clients rằng user mới vừa online
+			onlineMsg := Message{
+				Type:      "user_online",
+				SenderID:  client.ID,
+				CreatedAt: time.Now().Unix(),
+			}
+			onlineMsgJSON, _ := json.Marshal(onlineMsg)
+
+			h.mu.RLock()
+			for _, c := range h.Clients {
+				if c.ID == client.ID {
+					continue
+				}
+				select {
+				case c.Send <- onlineMsgJSON:
+				default:
+				}
+			}
+			h.mu.RUnlock()
+		case client := <-h.Unregister:
+			h.mu.Lock()
+			if _, ok := h.Clients[client.ID]; ok {
+				delete(h.Clients, client.ID)
+				close(client.Send)
+
+				offlineMsg := Message{
+					Type:      "user_offline",
+					SenderID:  client.ID,
+					CreatedAt: time.Now().Unix(),
+				}
+				offlineMsgJSON, _ := json.Marshal(offlineMsg)
+
+				for _, c := range h.Clients {
+					select {
+					case c.Send <- offlineMsgJSON:
+					default:
+					}
+				}
+			}
+			h.mu.Unlock()
 		case messeage := <-h.Broadcast:
 			h.mu.RLock()
 			participants, ok := h.Conversations[messeage.ConversationID]
@@ -71,9 +127,14 @@ func (h *Hub) Run() {
 				client, ok := h.Clients[userID]
 				h.mu.RUnlock()
 
+				messeageJson, err := json.Marshal(messeage)
+				if err != nil {
+					log.Printf("Error marshaling message: %v", err)
+					continue
+				}
 				if ok {
 					select {
-					case client.Send <- []byte(messeage.Messeage):
+					case client.Send <- messeageJson:
 					default:
 						h.mu.Lock()
 						close(client.Send)
@@ -93,4 +154,21 @@ func (h *Hub) JoinConversation(conversationID string, userID string) {
 		h.Conversations[conversationID] = make(map[string]bool)
 	}
 	h.Conversations[conversationID][userID] = true
+}
+
+func (h *Hub) IsOnline(userID string) bool {
+	h.mu.RLock()
+	defer h.mu.RUnlock()
+	_, online := h.Clients[userID]
+	return online
+}
+
+func (h *Hub) GetOnlineUser() []string {
+	h.mu.RLock()
+	defer h.mu.RUnlock()
+	users := make([]string, 0, len(h.Clients))
+	for user := range h.Clients {
+		users = append(users, user)
+	}
+	return users
 }

@@ -14,7 +14,11 @@ func main() {
 
 	r := gin.Default()
 
-	initial.SetupRouter(r, cfg.JWTKey, client)
+	router, hub := initial.SetupRouter(r, cfg.JWTKey, client)
+
+	go hub.Run()
+	log.Println("WebSocket hub started")
+
 	log.Printf("Server is running on PORT %s", cfg.Port)
-	log.Fatal(r.Run(":" + cfg.Port))
+	log.Fatal(router.Run(":" + cfg.Port))
 }

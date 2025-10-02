@@ -71,9 +71,14 @@ type GetConversationMesseageResponse struct {
 	Messeages      []Messeage `json:"messeages"`
 }
 
+type ParticipantInfo struct {
+	ID   string `json:"_id"`
+	Name string `json:"name"`
+}
+
 type Conversation struct {
-	ID          string   `json:"conversation_id"`
-	Participant []string `json:"participant"`
+	ID          string            `json:"conversation_id"`
+	Participant []ParticipantInfo `json:"participant"`
 }
 
 type GetConversationListResponse struct {
