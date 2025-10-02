@@ -3,6 +3,8 @@ package http
 import (
 	"backend-chat-app/internal/application"
 	"backend-chat-app/internal/application/chat"
+	ws "backend-chat-app/internal/infrastructure/websocket"
+	"encoding/json"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -10,11 +12,13 @@ import (
 
 type ChatHandle struct {
 	chatService chat.ChatService
+	hub         *ws.Hub
 }
 
-func NewChatHandle(chatService *chat.ChatService) *ChatHandle {
+func NewChatHandle(chatService *chat.ChatService, hub *ws.Hub) *ChatHandle {
 	return &ChatHandle{
 		chatService: *chatService,
+		hub:         hub,
 	}
 }
 
@@ -26,7 +30,7 @@ func (h *ChatHandle) CreateConversation(c *gin.Context) {
 	}
 	userID, exists := c.Get("user_id")
 	if !exists {
-		c.JSON(http.StatusUnauthorized, FailResponse(nil, "User ID not found"))
+		c.JSON(http.StatusUnauthorized, FailResponse(nil, "Unauthorized"))
 		return
 	}
 
@@ -55,7 +59,7 @@ func (h *ChatHandle) SendMesseage(c *gin.Context) {
 	}
 	userID, exists := c.Get("user_id")
 	if !exists {
-		c.JSON(http.StatusUnauthorized, FailResponse(nil, "User ID not found"))
+		c.JSON(http.StatusUnauthorized, FailResponse(nil, "Unauthorized"))
 		return
 	}
 	userIDStr, ok := userID.(string)
@@ -66,8 +70,25 @@ func (h *ChatHandle) SendMesseage(c *gin.Context) {
 	req.SenderID = userIDStr
 	res, err := h.chatService.SendMesseage(req)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, FailResponse(nil, "Invalid user ID format"))
+		c.JSON(http.StatusBadRequest, FailResponse(nil, "Send messeage fail with err: "+err.Error()))
 		return
+	}
+	if h.hub != nil {
+		msgJSON, _ := json.Marshal(map[string]interface{}{
+			"type":            "new_message",
+			"conversation_id": req.ConversationID,
+			"sender_id":       userIDStr,
+			"message":         res.Messeage,
+			"created_at":      res.CreatedAt,
+		})
+
+		h.hub.Broadcast <- &ws.Message{
+			ConversationID: req.ConversationID,
+			SenderID:       userIDStr,
+			Messeage:       string(msgJSON),
+			CreatedAt:      res.CreatedAt,
+			Type:           "new_message",
+		}
 	}
 	c.JSON(http.StatusCreated, SuccessResponse(res, "Conversation created successfully"))
 }

@@ -35,7 +35,7 @@ func (h *UserHandle) FindUserByPhone(c *gin.Context) {
 func (h *UserHandle) GetConversationList(c *gin.Context) {
 	userId, exists := c.Get("user_id")
 	if !exists {
-		c.JSON(http.StatusBadRequest, FailResponse(nil, "Require UserID"))
+		c.JSON(http.StatusBadRequest, FailResponse(nil, "Unauthorized"))
 		return
 	}
 	userIdStr, ok := userId.(string)

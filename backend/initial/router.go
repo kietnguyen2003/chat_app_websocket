@@ -5,6 +5,7 @@ import (
 	"backend-chat-app/internal/application/chat"
 	"backend-chat-app/internal/application/user"
 	"backend-chat-app/internal/infrastructure/database"
+	ws "backend-chat-app/internal/infrastructure/websocket"
 	"backend-chat-app/internal/interface/http"
 	"backend-chat-app/internal/interface/http/middleware"
 
@@ -14,6 +15,8 @@ import (
 )
 
 func SetupRouter(r *gin.Engine, JWTSecret string, client *mongo.Client) *gin.Engine {
+	hub := ws.NewHub()
+
 	userRepo := database.NewMongoUserRepository(client, "chat-app")
 	conversationRepo := database.NewMongoConversationRepository(client, "chat-app")
 	messeageRepo := database.NewMongoMesseageRepository(client, "chat-app")
@@ -24,7 +27,9 @@ func SetupRouter(r *gin.Engine, JWTSecret string, client *mongo.Client) *gin.Eng
 
 	authHandle := http.NewAuthHandle(authService, JWTSecret)
 	userHandle := http.NewUserHandle(userService)
-	chatHandle := http.NewChatHandle(chatService)
+	chatHandle := http.NewChatHandle(chatService, hub)
+
+	wsHandle := http.NewWebSocketHandle(hub, chatService)
 
 	r.Use(cors.New(cors.Config{
 		AllowOrigins: []string{"http://localhost:3000"},
@@ -56,6 +61,7 @@ func SetupRouter(r *gin.Engine, JWTSecret string, client *mongo.Client) *gin.Eng
 		chatGroup.POST("/send", chatHandle.SendMesseage)
 		chatGroup.POST("/conversation", chatHandle.CreateConversation)
 		chatGroup.GET("/conversation/:id", chatHandle.GetConversation)
+		chatGroup.GET("/ws", wsHandle.HandleWebSocket)
 	}
 	return r
 }
