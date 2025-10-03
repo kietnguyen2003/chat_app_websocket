@@ -115,7 +115,12 @@ func (h *Hub) Run() {
 			h.mu.RLock()
 			participants, ok := h.Conversations[messeage.ConversationID]
 			h.mu.RUnlock()
+
+			log.Printf("Broadcasting message in conversation %s. Participants found: %v, Count: %d",
+				messeage.ConversationID, ok, len(participants))
+
 			if !ok {
+				log.Printf("No participants found for conversation %s. Skipping broadcast.", messeage.ConversationID)
 				continue
 			}
 			for userID := range participants {
@@ -154,6 +159,7 @@ func (h *Hub) JoinConversation(conversationID string, userID string) {
 		h.Conversations[conversationID] = make(map[string]bool)
 	}
 	h.Conversations[conversationID][userID] = true
+	log.Printf("User %s joined conversation %s. Total participants: %d", userID, conversationID, len(h.Conversations[conversationID]))
 }
 
 func (h *Hub) IsOnline(userID string) bool {

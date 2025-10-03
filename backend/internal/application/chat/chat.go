@@ -43,11 +43,11 @@ func (s *ChatService) CreateConversation(req application.CreateConversationReque
 	participants := []conversation.Participant{
 		{
 			ID:   currentUser.ID,
-			Name: currentUser.Username,
+			Name: currentUser.Name,
 		},
 		{
 			ID:   friendUser.ID,
-			Name: friendUser.Username,
+			Name: friendUser.Name,
 		},
 	}
 

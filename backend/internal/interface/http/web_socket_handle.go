@@ -36,17 +36,22 @@ func NewWebSocketHandle(hub *ws.Hub, chatService *chat.ChatService) *WebSocketHa
 func (h *WebSocketHandle) HandleWebSocket(c *gin.Context) {
 	userID, exists := c.Get("user_id")
 	if !exists {
+		log.Printf("WebSocket auth failed: user_id not found in context")
 		c.JSON(http.StatusUnauthorized, FailResponse(nil, "Unauthorized"))
 		return
 	}
 
 	userIDStr := userID.(string)
+	log.Printf("WebSocket connection attempt from user: %s", userIDStr)
 
 	conn, err := upgrader.Upgrade(c.Writer, c.Request, nil)
 	if err != nil {
 		log.Printf("WebSocket upgrade error: %v", err)
+		c.JSON(http.StatusInternalServerError, FailResponse(nil, "WebSocket upgrade failed"))
 		return
 	}
+
+	log.Printf("WebSocket connection established for user: %s", userIDStr)
 
 	client := &ws.Client{
 		ID:   userIDStr,
@@ -89,26 +94,39 @@ func (h *WebSocketHandle) readPump(client *ws.Client) {
 			break
 		}
 
+		log.Printf("Received raw WebSocket message: %s", string(message))
+
 		var msg ws.Message
 		if err := json.Unmarshal(message, &msg); err != nil {
 			log.Printf("Invalid message format: %v", err)
 			continue
 		}
 
+		log.Printf("Parsed WebSocket message - Type: %s, ConversationID: %s, SenderID: %s",
+			msg.Type, msg.ConversationID, msg.SenderID)
+
 		switch msg.Type {
 		case "join_conversation":
+			log.Printf("User %s joining conversation %s", client.ID, msg.ConversationID)
 			h.hub.JoinConversation(msg.ConversationID, client.ID)
 		case "new_message":
+			log.Printf("Processing new message from %s in conversation %s: %s",
+				msg.SenderID, msg.ConversationID, msg.Messeage)
 			req := &application.SendMesseageRequest{
 				ConversationID: msg.ConversationID,
 				SenderID:       msg.SenderID,
 				Messeage:       msg.Messeage,
 			}
-			_, err := h.chatService.SendMesseage(*req)
+			res, err := h.chatService.SendMesseage(*req)
 			if err != nil {
 				log.Printf("Failed to save messeage to DB: %v", err)
+			} else {
+				log.Printf("Message saved to DB successfully. Created at: %d", res.CreatedAt)
 			}
+			log.Printf("Broadcasting message to Hub")
 			h.hub.Broadcast <- &msg
+		default:
+			log.Printf("Unknown message type: %s", msg.Type)
 		}
 	}
 }
