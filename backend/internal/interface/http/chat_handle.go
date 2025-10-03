@@ -78,7 +78,7 @@ func (h *ChatHandle) SendMesseage(c *gin.Context) {
 			"type":            "new_message",
 			"conversation_id": req.ConversationID,
 			"sender_id":       userIDStr,
-			"message":         res.Messeage,
+			"messeage":        res.Messeage,
 			"created_at":      res.CreatedAt,
 		})
 
@@ -90,7 +90,7 @@ func (h *ChatHandle) SendMesseage(c *gin.Context) {
 			Type:           "new_message",
 		}
 	}
-	c.JSON(http.StatusCreated, SuccessResponse(res, "Conversation created successfully"))
+	c.JSON(http.StatusCreated, SuccessResponse(res, "Message sent successfully"))
 }
 
 func (h *ChatHandle) GetConversation(c *gin.Context) {

@@ -63,7 +63,9 @@ func SetupRouter(r *gin.Engine, JWTSecret string, client *mongo.Client) (*gin.En
 		chatGroup.POST("/send", chatHandle.SendMesseage)
 		chatGroup.POST("/conversation", chatHandle.CreateConversation)
 		chatGroup.GET("/conversation/:id", chatHandle.GetConversation)
-		chatGroup.GET("/ws", wsHandle.HandleWebSocket)
 	}
+
+	// WebSocket endpoint - separate to avoid CORS preflight issues
+	r.GET("/ws", authMiddleware, wsHandle.HandleWebSocket)
 	return r, hub
 }

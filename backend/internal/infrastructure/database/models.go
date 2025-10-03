@@ -11,8 +11,7 @@ type MongoUser struct {
 	Password           string               `bson:"password"`
 	Email              string               `bson:"email"`
 	Phone              string               `bson:"phone"`
-	Role               string               `bson:"role"`
-	Avatar             string               `bson:"avatar"`
+	Name               string               `bson:"name"`
 	RefreshToken       string               `bson:"refresh_token,omitempty"`
 	RefreshTokenExpiry int64                `bson:"refresh_token_expiry"`
 	Conversations      []primitive.ObjectID `bson:"conversations"`

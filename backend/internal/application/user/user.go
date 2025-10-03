@@ -28,9 +28,9 @@ func (us *UserService) FindUserByPhone(request application.FindUserByPhoneReques
 		return nil, errors.New("phone doesnt exists")
 	}
 	return &application.FindUserByPhoneResponse{
-		Email:  user.Email,
-		Avatar: user.Avatar,
-		Phone:  user.Phone,
+		Email: user.Email,
+		Name:  user.Name,
+		Phone: user.Phone,
 	}, nil
 }
 

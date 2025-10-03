@@ -5,19 +5,6 @@ import (
 	"time"
 )
 
-// Role enum
-type Role string
-
-const (
-	RoleUser  Role = "user"
-	RoleAdmin Role = "admin"
-)
-
-// ValidateRole checks if the role is valid
-func ValidateRole(role Role) bool {
-	return role == RoleUser || role == RoleAdmin
-}
-
 // entity
 type User struct {
 	ID                 string
@@ -25,8 +12,7 @@ type User struct {
 	Password           string
 	Email              string
 	Phone              string
-	Avatar             string
-	Role               Role
+	Name               string
 	RefreshToken       string
 	RefreshTokenExpiry int64
 	Conversations      []string
@@ -34,7 +20,7 @@ type User struct {
 	UpdateAt           time.Time
 }
 
-func NewUser(username, password, email string, role Role, phone string) (*User, error) {
+func NewUser(username, password, email string, name string, phone string) (*User, error) {
 	if username == "" {
 		return nil, errors.New("username can not empty")
 	}
@@ -44,17 +30,17 @@ func NewUser(username, password, email string, role Role, phone string) (*User, 
 	if email == "" {
 		return nil, errors.New("email can not empty")
 	}
-	if !ValidateRole(role) {
-		return nil, errors.New("invalid role")
-	}
 	if phone == "" {
 		return nil, errors.New("phone can not empty")
+	}
+	if name == "" {
+		return nil, errors.New("name can not empty")
 	}
 	return &User{
 		Username:  username,
 		Password:  password,
 		Email:     email,
-		Role:      role,
+		Name:      name,
 		Phone:     phone,
 		CreatedAt: time.Now(),
 		UpdateAt:  time.Now(),

@@ -5,7 +5,9 @@ A robust Go-based REST API backend for a real-time chat application with user au
 ## 🚀 Features
 
 - **User Authentication**: Complete auth system with JWT tokens (login, register, refresh, logout)
-- **Real-time Messaging**: Send and receive messages in conversations
+- **Real-time Messaging**: Send and receive messages in conversations via WebSocket
+- **WebSocket Support**: Real-time bidirectional communication for instant messaging
+- **Online/Offline Status**: Track user online/offline status in real-time
 - **Conversation Management**: Create conversations with participants tracking
 - **User Discovery**: Find users by phone number
 - **Conversation List**: Retrieve all conversations with participant names
@@ -20,6 +22,7 @@ A robust Go-based REST API backend for a real-time chat application with user au
 
 - **Language**: Go 1.24.4
 - **Web Framework**: Gin
+- **WebSocket**: Gorilla WebSocket
 - **Database**: MongoDB
 - **Authentication**: JWT (golang-jwt/jwt/v5)
 - **Password Hashing**: bcrypt
@@ -55,19 +58,22 @@ backend/
 │   │       ├── user.go        # User domain logic
 │   │       └── entity.go      # User entities
 │   ├── infrastructure/
-│   │   └── database/
-│   │       ├── base.go        # Base database utilities
-│   │       ├── models.go      # MongoDB models
-│   │       ├── registry/
-│   │       │   └── registry.go # Collection registry pattern
-│   │       ├── mongo_user_repository.go
-│   │       ├── mongo_conversation_repository.go
-│   │       └── mongo_messeage_repository.go
+│   │   ├── database/
+│   │   │   ├── base.go        # Base database utilities
+│   │   │   ├── models.go      # MongoDB models
+│   │   │   ├── registry/
+│   │   │   │   └── registry.go # Collection registry pattern
+│   │   │   ├── mongo_user_repository.go
+│   │   │   ├── mongo_conversation_repository.go
+│   │   │   └── mongo_messeage_repository.go
+│   │   └── websocket/
+│   │       └── hub.go         # WebSocket hub and client management
 │   └── interface/
 │       └── http/
 │           ├── auth_handle.go # Authentication HTTP handlers
 │           ├── chat_handle.go # Chat HTTP handlers
 │           ├── user_handle.go # User HTTP handlers
+│           ├── web_socket_handle.go # WebSocket handlers
 │           └── middleware/    # HTTP middlewares
 ├── .env                       # Environment variables
 ├── .gitignore                 # Git ignore rules
@@ -121,6 +127,77 @@ All API endpoints return responses in the following format:
 }
 ```
 
+### WebSocket Endpoint
+
+#### Connect to WebSocket
+- **Endpoint**: `WS /ws`
+- **Description**: Establish WebSocket connection for real-time messaging
+- **Headers**: `Authorization: Bearer <access_token>`
+
+**Connection Flow**:
+1. Client connects to WebSocket endpoint with JWT token
+2. Server upgrades HTTP connection to WebSocket
+3. Client is registered in the Hub
+4. Client receives list of currently online users
+5. All other clients are notified that this user is now online
+
+**Message Types**:
+
+**1. Join Conversation** (Client → Server):
+```json
+{
+  "type": "join_conversation",
+  "conversation_id": "string"
+}
+```
+
+**2. Send Message** (Client → Server):
+```json
+{
+  "type": "new_message",
+  "conversation_id": "string",
+  "sender_id": "string",
+  "messeage": "string",
+  "created_at": 1234567890
+}
+```
+
+**3. Receive Message** (Server → Client):
+```json
+{
+  "type": "new_message",
+  "conversation_id": "string",
+  "sender_id": "string",
+  "messeage": "string",
+  "created_at": 1234567890
+}
+```
+
+**4. User Online Notification** (Server → Client):
+```json
+{
+  "type": "user_online",
+  "sender_id": "user_id",
+  "created_at": 1234567890
+}
+```
+
+**5. User Offline Notification** (Server → Client):
+```json
+{
+  "type": "user_offline",
+  "sender_id": "user_id",
+  "created_at": 1234567890
+}
+```
+
+**Features**:
+- Automatic ping/pong heartbeat every 54 seconds
+- Connection timeout after 60 seconds of inactivity
+- Buffered message channels (256 messages)
+- Concurrent message broadcasting
+- Thread-safe client management
+
 ### Authentication Endpoints
 
 All authentication endpoints are public (no authentication required).
@@ -135,8 +212,8 @@ All authentication endpoints are public (no authentication required).
   "username": "string",
   "password": "string",
   "email": "string",
-  "phone": "string",
-  "role": "user" // optional, defaults to "user", can be "admin"
+  "name": "string",
+  "phone": "string"
 }
 ```
 
@@ -148,7 +225,8 @@ All authentication endpoints are public (no authentication required).
   "data": {
     "user": {
       "user_id": "string",
-      "role": "user"
+      "name": "string",
+      "conversations": []
     },
     "token": {
       "access_token": "jwt-token-string",
@@ -187,7 +265,8 @@ All authentication endpoints are public (no authentication required).
   "data": {
     "user": {
       "user_id": "string",
-      "role": "user"
+      "name": "string",
+      "conversations": ["conversation_id_1", "conversation_id_2"]
     },
     "token": {
       "access_token": "jwt-token-string",
@@ -217,7 +296,8 @@ All authentication endpoints are public (no authentication required).
   "data": {
     "user": {
       "user_id": "string",
-      "role": "user"
+      "name": "string",
+      "conversations": ["conversation_id_1", "conversation_id_2"]
     },
     "token": {
       "access_token": "new-jwt-token-string",
@@ -271,7 +351,7 @@ All user endpoints require authentication via Bearer token in the Authorization 
   "message": "User found",
   "data": {
     "email": "string",
-    "avatar": "string",
+    "name": "string",
     "phone": "string"
   }
 }
@@ -407,12 +487,12 @@ This project follows **Clean Architecture** principles:
   "password": "string", // bcrypt hashed
   "email": "string",
   "phone": "string",
-  "role": "user|admin",
+  "name": "string",
   "refresh_token": "string", // bcrypt hashed
   "refresh_token_expiry": "int64",
   "conversations": ["ObjectId"], // Array of conversation IDs
-  "created_at": "timestamp",
-  "updated_at": "timestamp"
+  "create_at": "timestamp",
+  "update_at": "timestamp"
 }
 ```
 
@@ -466,7 +546,7 @@ Example curl commands:
 # Register a new user
 curl -X POST http://localhost:8080/auth/register \
   -H "Content-Type: application/json" \
-  -d '{"username":"john_doe","password":"secure123","email":"john@example.com","phone":"0123456789"}'
+  -d '{"username":"john_doe","password":"secure123","email":"john@example.com","name":"John Doe","phone":"0123456789"}'
 
 # Login with credentials
 curl -X POST http://localhost:8080/auth/login \
@@ -510,6 +590,62 @@ curl -X GET http://localhost:8080/chat/conversation/65f1a2b3c4d5e6f7g8h9i0j1 \
   -H "Authorization: Bearer <your-access-token>"
 ```
 
+**WebSocket Example (JavaScript)**:
+```javascript
+// Connect to WebSocket
+const token = "your-access-token";
+const ws = new WebSocket(`ws://localhost:8080/ws?token=${token}`);
+
+// Listen for connection open
+ws.onopen = () => {
+  console.log("Connected to WebSocket");
+
+  // Join a conversation
+  ws.send(JSON.stringify({
+    type: "join_conversation",
+    conversation_id: "conversation_id_here"
+  }));
+};
+
+// Listen for messages
+ws.onmessage = (event) => {
+  const data = JSON.parse(event.data);
+
+  switch(data.type) {
+    case "new_message":
+      console.log(`New message from ${data.sender_id}: ${data.messeage}`);
+      break;
+    case "user_online":
+      console.log(`User ${data.sender_id} is now online`);
+      break;
+    case "user_offline":
+      console.log(`User ${data.sender_id} is now offline`);
+      break;
+  }
+};
+
+// Send a message
+const sendMessage = (conversationId, message) => {
+  ws.send(JSON.stringify({
+    type: "new_message",
+    conversation_id: conversationId,
+    sender_id: "your_user_id",
+    messeage: message,
+    created_at: Date.now()
+  }));
+};
+
+// Handle connection close
+ws.onclose = () => {
+  console.log("Disconnected from WebSocket");
+};
+
+// Handle errors
+ws.onerror = (error) => {
+  console.error("WebSocket error:", error);
+};
+```
+
 ## 📝 Development
 
 ### API Workflow
@@ -519,14 +655,24 @@ curl -X GET http://localhost:8080/chat/conversation/65f1a2b3c4d5e6f7g8h9i0j1 \
 Register → Login → Get Access Token → Use Token for API calls → Refresh when expired → Logout
 ```
 
-**2. Chat Flow:**
+**2. Chat Flow (REST API):**
 ```
 Login → Find User by Phone → Create Conversation → Send Messages → Get Messages
 ```
 
-**3. Conversation List Flow:**
+**3. Chat Flow (WebSocket - Real-time):**
+```
+Login → Connect to WebSocket → Join Conversation → Send/Receive Messages in Real-time
+```
+
+**4. Conversation List Flow:**
 ```
 Login → Get Conversation List (with participants) → Select Conversation → Get Messages
+```
+
+**5. Online Status Tracking:**
+```
+Connect to WebSocket → Receive Online Users List → Get Real-time Online/Offline Notifications
 ```
 
 ### Adding New Features

@@ -2,7 +2,7 @@ package application
 
 type UserData struct {
 	ID            string   `json:"user_id"`
-	Role          string   `json:"role"`
+	Name          string   `json:"name"`
 	Conversations []string `json:"conversations"`
 }
 type TokenData struct {
@@ -23,7 +23,7 @@ type RegisterRequest struct {
 	Username string `json:"username"`
 	Password string `json:"password"`
 	Email    string `json:"email"`
-	Role     string `json:"role,omitempty"`
+	Name     string `json:"name"`
 	Phone    string `json:"phone"`
 }
 type RefreshTokenRequest struct {
@@ -36,9 +36,9 @@ type FindUserByPhoneRequest struct {
 }
 
 type FindUserByPhoneResponse struct {
-	Email  string `json:"email"`
-	Avatar string `json:"avatar"`
-	Phone  string `json:"phone"`
+	Email string `json:"email"`
+	Name  string `json:"name"`
+	Phone string `json:"phone"`
 }
 
 type CreateConversationRequest struct {

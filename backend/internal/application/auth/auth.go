@@ -65,13 +65,7 @@ func (s *Service) Register(request application.RegisterRequest) (*application.Au
 		return nil, err
 	}
 
-	// Set default role if not provided
-	role := user.RoleUser
-	if request.Role != "" {
-		role = user.Role(request.Role)
-	}
-
-	user, err := user.NewUser(request.Username, string(hashPassword), request.Email, role, request.Phone)
+	user, err := user.NewUser(request.Username, string(hashPassword), request.Email, request.Name, request.Phone)
 	if err != nil {
 		return nil, err
 	}
@@ -142,7 +136,7 @@ func (s *Service) createAuthResponse(user *user.User, accessToken, refreshToken 
 	return &application.AuthResponse{
 		User: application.UserData{
 			ID:            user.ID,
-			Role:          string(user.Role),
+			Name:          user.Name,
 			Conversations: user.Conversations,
 		},
 		Token: application.TokenData{
@@ -171,7 +165,6 @@ func (s *Service) generateAndSaveTokens(user *user.User) (string, string, error)
 func (s *Service) generateToken(user user.User) (string, string, error) {
 	claims := jwt.MapClaims{
 		"user_id": user.ID,
-		"role":    user.Role,
 		"exp":     time.Now().Add(time.Hour * 24).Unix(),
 	}
 	access_token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
