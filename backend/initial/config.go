@@ -19,7 +19,7 @@ func LoadConfig() *Config {
 	}
 	config := &Config{
 		Port:   getEnv("PORT", "8080"),
-		DBUrl:  getEnv("DATABASE_URL_LOCAL", "default-db-url"),
+		DBUrl:  getEnv("DATABASE_URL", "default-db-url"),
 		JWTKey: getEnv("JWT_SECRET", "default-jwt-secret"),
 		DBName: getEnv("DBNAME", "default-db-name"),
 	}

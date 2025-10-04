@@ -1,5 +1,0 @@
-- Từ client -> sever
-+ login: user login vào hệ thống qua api, websocket đăng ký vào hub, gửi danh sách user đang online cho client
-+ logout: user đăng xuất khỏi hệ thông qua api, websocket unregister khỏi hub, gửi danh sách user đang online cho sever
-+ new_conversation: userA tạo conversation với userB qua api, sever gửi thông báo đến cho userB
-+ new_message: user gửi tin nhắn cho bạn
