@@ -47,7 +47,8 @@ type CreateConversationRequest struct {
 }
 
 type CreateConversationResponse struct {
-	ID string `json:"conversation_id"`
+	ID       string `json:"conversation_id"`
+	FriendID string
 }
 
 type SendMesseageRequest struct {

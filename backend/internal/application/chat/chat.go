@@ -40,6 +40,15 @@ func (s *ChatService) CreateConversation(req application.CreateConversationReque
 		return nil, errors.New("friend user not found")
 	}
 
+	check, err := s.conversationRepo.IsCommunicate(currentUser.ID, friendUser.ID)
+	if err != nil {
+		return nil, errors.New("failed to check communicate: " + err.Error())
+	}
+	if check {
+		return nil, errors.New("they have conversation yet")
+	}
+	fmt.Println("Is communicated?: ", check)
+
 	participants := []conversation.Participant{
 		{
 			ID:   currentUser.ID,
@@ -69,7 +78,8 @@ func (s *ChatService) CreateConversation(req application.CreateConversationReque
 
 	fmt.Println("Create conversation successfully!!")
 	return &application.CreateConversationResponse{
-		ID: res.ID,
+		ID:       res.ID,
+		FriendID: friendUser.ID,
 	}, nil
 }
 

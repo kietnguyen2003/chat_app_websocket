@@ -5,7 +5,9 @@ import (
 	"backend-chat-app/internal/application/chat"
 	ws "backend-chat-app/internal/infrastructure/websocket"
 	"encoding/json"
+	"log"
 	"net/http"
+	"time"
 
 	"github.com/gin-gonic/gin"
 )
@@ -46,6 +48,19 @@ func (h *ChatHandle) CreateConversation(c *gin.Context) {
 	if err != nil {
 		c.JSON(http.StatusBadRequest, FailResponse(nil, "Failed to create conversation: "+err.Error()))
 		return
+	}
+	if h.hub != nil {
+		notificationMsg := ws.Message{
+			Type:           "new_conversation",
+			ConversationID: res.ID,
+			SenderID:       userIDStr,
+			CreatedAt:      time.Now().Unix(),
+		}
+		h.hub.JoinConversation(res.ID, userIDStr)
+		h.hub.JoinConversation(res.ID, res.FriendID)
+
+		h.hub.Broadcast <- &notificationMsg
+		log.Printf("Sent new_conversation notification for %s", res.ID)
 	}
 
 	c.JSON(http.StatusCreated, SuccessResponse(res, "Conversation created successfully"))

@@ -22,15 +22,25 @@ func AuthMiddleware(authService auth.Service) gin.HandlerFunc {
 		}
 
 		if tokenString == "" {
-			c.JSON(http.StatusUnauthorized, gin.H{"error": "Authorization token required"})
-			c.Abort()
+			// Check if this is a WebSocket upgrade request
+			if c.GetHeader("Upgrade") == "websocket" {
+				c.AbortWithStatus(http.StatusUnauthorized)
+			} else {
+				c.JSON(http.StatusUnauthorized, gin.H{"error": "Authorization token required"})
+				c.Abort()
+			}
 			return
 		}
 
 		userID, err := authService.ValidateToken(tokenString)
 		if err != nil {
-			c.JSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized: " + err.Error()})
-			c.Abort()
+			// Check if this is a WebSocket upgrade request
+			if c.GetHeader("Upgrade") == "websocket" {
+				c.AbortWithStatus(http.StatusUnauthorized)
+			} else {
+				c.JSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized: " + err.Error()})
+				c.Abort()
+			}
 			return
 		}
 

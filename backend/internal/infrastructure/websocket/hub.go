@@ -123,29 +123,31 @@ func (h *Hub) Run() {
 				log.Printf("No participants found for conversation %s. Skipping broadcast.", messeage.ConversationID)
 				continue
 			}
-			for userID := range participants {
-				if userID == messeage.SenderID {
-					continue
-				}
 
+			messeageJson, err := json.Marshal(messeage)
+			if err != nil {
+				log.Printf("Error marshaling message: %v", err)
+				continue
+			}
+
+			for userID := range participants {
 				h.mu.RLock()
 				client, ok := h.Clients[userID]
 				h.mu.RUnlock()
 
-				messeageJson, err := json.Marshal(messeage)
-				if err != nil {
-					log.Printf("Error marshaling message: %v", err)
-					continue
-				}
 				if ok {
 					select {
 					case client.Send <- messeageJson:
+						log.Printf("Message broadcasted to user %s in conversation %s", userID, messeage.ConversationID)
 					default:
 						h.mu.Lock()
 						close(client.Send)
 						delete(h.Clients, userID)
 						h.mu.Unlock()
+						log.Printf("Failed to send message to user %s, client removed", userID)
 					}
+				} else {
+					log.Printf("User %s not online, skipping broadcast", userID)
 				}
 			}
 		}

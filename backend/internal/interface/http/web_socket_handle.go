@@ -109,6 +109,24 @@ func (h *WebSocketHandle) readPump(client *ws.Client) {
 		case "join_conversation":
 			log.Printf("User %s joining conversation %s", client.ID, msg.ConversationID)
 			h.hub.JoinConversation(msg.ConversationID, client.ID)
+
+			// Send confirmation back to client
+			confirmMsg := ws.Message{
+				Type:           "join_success",
+				ConversationID: msg.ConversationID,
+				SenderID:       client.ID,
+				CreatedAt:      time.Now().Unix(),
+			}
+			confirmJSON, _ := json.Marshal(confirmMsg)
+			select {
+			case client.Send <- confirmJSON:
+				log.Printf("Join confirmation sent to user %s for conversation %s", client.ID, msg.ConversationID)
+			default:
+				log.Printf("Failed to send join confirmation to user %s", client.ID)
+			}
+		case "new_conversation":
+			log.Printf("Broadcasting new conversation %s notification", msg.ConversationID)
+			h.hub.Broadcast <- &msg
 		case "new_message":
 			log.Printf("Processing new message from %s in conversation %s: %s",
 				msg.SenderID, msg.ConversationID, msg.Messeage)

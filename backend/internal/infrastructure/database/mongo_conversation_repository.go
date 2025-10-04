@@ -2,6 +2,7 @@ package database
 
 import (
 	"backend-chat-app/internal/domain/conversation"
+	"fmt"
 
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
@@ -97,4 +98,35 @@ func (cr *MongoConversationRepository) GetByID(conversationID string) (*conversa
 	}
 	return cr.toDomainConversation(mongoConversation), nil
 
+}
+
+func (cr *MongoConversationRepository) IsCommunicate(participant1ID string, participant2ID string) (bool, error) {
+	ctx, cancel := withContextTimeout()
+	defer cancel()
+
+	object1ID, err := primitive.ObjectIDFromHex(participant1ID)
+	if err != nil {
+		return false, err
+	}
+	object2ID, err := primitive.ObjectIDFromHex(participant2ID)
+	if err != nil {
+		return false, err
+	}
+	filter := bson.M{
+		"participant._id": bson.M{
+			"$all": []primitive.ObjectID{object1ID, object2ID},
+		},
+	}
+	var mongoConversation MongoConversation
+	err = cr.collection.FindOne(ctx, filter).Decode(&mongoConversation)
+	if err == mongo.ErrNoDocuments {
+		fmt.Println("No documents finded")
+		return false, nil
+	}
+	if err != nil {
+		fmt.Println("Hello: ", err.Error())
+		return false, err
+	}
+
+	return true, nil
 }
