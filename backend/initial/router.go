@@ -19,11 +19,11 @@ func SetupRouter(r *gin.Engine, JWTSecret string, client *mongo.Client) (*gin.En
 
 	userRepo := database.NewMongoUserRepository(client, "chat-app")
 	conversationRepo := database.NewMongoConversationRepository(client, "chat-app")
-	messeageRepo := database.NewMongoMesseageRepository(client, "chat-app")
+	messageRepo := database.NewMongoMessageRepository(client, "chat-app")
 
 	authService := auth.NewService(userRepo, JWTSecret)
 	userService := user.NewUserService(userRepo, conversationRepo)
-	chatService := chat.NewChatService(messeageRepo, conversationRepo, userRepo)
+	chatService := chat.NewChatService(messageRepo, conversationRepo, userRepo)
 
 	authHandle := http.NewAuthHandle(authService, JWTSecret)
 	userHandle := http.NewUserHandle(userService)
@@ -60,7 +60,7 @@ func SetupRouter(r *gin.Engine, JWTSecret string, client *mongo.Client) (*gin.En
 	chatGroup := r.Group("/chat")
 	chatGroup.Use(authMiddleware)
 	{
-		chatGroup.POST("/send", chatHandle.SendMesseage)
+		chatGroup.POST("/send", chatHandle.SendMessage)
 		chatGroup.POST("/conversation", chatHandle.CreateConversation)
 		chatGroup.GET("/conversation/:id", chatHandle.GetConversation)
 	}

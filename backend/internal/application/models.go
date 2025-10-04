@@ -51,25 +51,25 @@ type CreateConversationResponse struct {
 	FriendID string
 }
 
-type SendMesseageRequest struct {
-	Messeage       string `json:"messeage"`
+type SendMessageRequest struct {
+	Message        string `json:"message"`
 	ConversationID string `json:"conversation_id"`
 	SenderID       string `json:"sender_id"`
 }
 
-type SendMesseageResponse struct {
-	Messeage  string `json:"messeage"`
+type SendMessageResponse struct {
+	Message   string `json:"message"`
 	CreatedAt int64  `json:"created_at"`
 }
 
-type Messeage struct {
+type Message struct {
 	SenderID  string `json:"sender_id"`
-	Messeage  string `json:"messeage"`
+	Message   string `json:"message"`
 	CreatedAt int64  `json:"created_at"`
 }
-type GetConversationMesseageResponse struct {
-	ConversationID string     `json:"conversation_id"`
-	Messeages      []Messeage `json:"messeages"`
+type GetConversationMessageResponse struct {
+	ConversationID string    `json:"conversation_id"`
+	Messages       []Message `json:"messages"`
 }
 
 type ParticipantInfo struct {

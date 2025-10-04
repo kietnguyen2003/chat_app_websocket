@@ -31,7 +31,7 @@ export interface Conversation {
 
 export interface Message {
   sender_id: string;
-  messeage: string;
+  message: string;
   created_at: number;
 }
 
@@ -42,6 +42,6 @@ export interface WSMessage {
   type: WSMessageType;
   conversation_id: string;
   sender_id: string;
-  messeage: string;
+  message: string;
   created_at: number;
 }

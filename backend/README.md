@@ -51,8 +51,8 @@ backend/
 │   │   ├── conversation/
 │   │   │   ├── conversation.go # Conversation domain logic
 │   │   │   └── entity.go      # Conversation entities
-│   │   ├── messeage/
-│   │   │   ├── messeage.go    # Message domain logic
+│   │   ├── message/
+│   │   │   ├── message.go    # Message domain logic
 │   │   │   └── entity.go      # Message entities
 │   │   └── user/
 │   │       ├── user.go        # User domain logic
@@ -65,7 +65,7 @@ backend/
 │   │   │   │   └── registry.go # Collection registry pattern
 │   │   │   ├── mongo_user_repository.go
 │   │   │   ├── mongo_conversation_repository.go
-│   │   │   └── mongo_messeage_repository.go
+│   │   │   └── mongo_message_repository.go
 │   │   └── websocket/
 │   │       └── hub.go         # WebSocket hub and client management
 │   └── interface/
@@ -157,7 +157,7 @@ All API endpoints return responses in the following format:
   "type": "new_message",
   "conversation_id": "string",
   "sender_id": "string",
-  "messeage": "string",
+  "message": "string",
   "created_at": 1234567890
 }
 ```
@@ -168,7 +168,7 @@ All API endpoints return responses in the following format:
   "type": "new_message",
   "conversation_id": "string",
   "sender_id": "string",
-  "messeage": "string",
+  "message": "string",
   "created_at": 1234567890
 }
 ```
@@ -421,7 +421,7 @@ All chat endpoints require authentication via Bearer token in the Authorization 
 ```json
 {
   "conversation_id": "string",
-  "messeage": "string"
+  "message": "string"
 }
 ```
 
@@ -431,7 +431,7 @@ All chat endpoints require authentication via Bearer token in the Authorization 
   "status": "success",
   "message": "Message sent successfully",
   "data": {
-    "messeage": "string",
+    "message": "string",
     "created_at": 1234567890
   }
 }
@@ -449,10 +449,10 @@ All chat endpoints require authentication via Bearer token in the Authorization 
   "message": "Messages retrieved successfully",
   "data": {
     "conversation_id": "string",
-    "messeages": [
+    "messages": [
       {
         "sender_id": "string",
-        "messeage": "string",
+        "message": "string",
         "created_at": 1234567890
       }
     ]
@@ -517,7 +517,7 @@ This project follows **Clean Architecture** principles:
   "_id": "ObjectId",
   "conversation_id": "ObjectId",
   "sender": "ObjectId", // User ID who sent the message
-  "messeage": "string", // Message content
+  "message": "string", // Message content
   "created_at": "timestamp"
 }
 ```
@@ -583,7 +583,7 @@ curl -X POST http://localhost:8080/chat/conversation \
 curl -X POST http://localhost:8080/chat/send \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer <your-access-token>" \
-  -d '{"conversation_id":"65f1a2b3c4d5e6f7g8h9i0j1","messeage":"Hello, how are you?"}'
+  -d '{"conversation_id":"65f1a2b3c4d5e6f7g8h9i0j1","message":"Hello, how are you?"}'
 
 # Get all messages in a conversation (requires authentication)
 curl -X GET http://localhost:8080/chat/conversation/65f1a2b3c4d5e6f7g8h9i0j1 \
@@ -613,7 +613,7 @@ ws.onmessage = (event) => {
 
   switch(data.type) {
     case "new_message":
-      console.log(`New message from ${data.sender_id}: ${data.messeage}`);
+      console.log(`New message from ${data.sender_id}: ${data.message}`);
       break;
     case "user_online":
       console.log(`User ${data.sender_id} is now online`);
@@ -630,7 +630,7 @@ const sendMessage = (conversationId, message) => {
     type: "new_message",
     conversation_id: conversationId,
     sender_id: "your_user_id",
-    messeage: message,
+    message: message,
     created_at: Date.now()
   }));
 };

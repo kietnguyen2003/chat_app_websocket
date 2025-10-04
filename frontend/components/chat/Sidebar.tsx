@@ -111,7 +111,7 @@ const Sidebar: React.FC<SidebarProps> = ({ conversations, onSelectConversation, 
                       )}
                     </div>
                     <p className="text-sm text-gray-400 truncate">
-                      {conv.last_message ? conv.last_message.messeage : 'No messages yet'}
+                      {conv.last_message ? conv.last_message.message : 'No messages yet'}
                     </p>
                   </div>
                 </div>

@@ -28,7 +28,7 @@ type Hub struct {
 type Message struct {
 	ConversationID string `json:"conversation_id"`
 	SenderID       string `json:"sender_id"`
-	Messeage       string `json:"messeage"`
+	Message        string `json:"message"`
 	CreatedAt      int64  `json:"created_at"`
 	Type           string `json:"type"`
 }
@@ -111,20 +111,20 @@ func (h *Hub) Run() {
 				}
 			}
 			h.mu.Unlock()
-		case messeage := <-h.Broadcast:
+		case message := <-h.Broadcast:
 			h.mu.RLock()
-			participants, ok := h.Conversations[messeage.ConversationID]
+			participants, ok := h.Conversations[message.ConversationID]
 			h.mu.RUnlock()
 
 			log.Printf("Broadcasting message in conversation %s. Participants found: %v, Count: %d",
-				messeage.ConversationID, ok, len(participants))
+				message.ConversationID, ok, len(participants))
 
 			if !ok {
-				log.Printf("No participants found for conversation %s. Skipping broadcast.", messeage.ConversationID)
+				log.Printf("No participants found for conversation %s. Skipping broadcast.", message.ConversationID)
 				continue
 			}
 
-			messeageJson, err := json.Marshal(messeage)
+			messageJson, err := json.Marshal(message)
 			if err != nil {
 				log.Printf("Error marshaling message: %v", err)
 				continue
@@ -137,8 +137,8 @@ func (h *Hub) Run() {
 
 				if ok {
 					select {
-					case client.Send <- messeageJson:
-						log.Printf("Message broadcasted to user %s in conversation %s", userID, messeage.ConversationID)
+					case client.Send <- messageJson:
+						log.Printf("Message broadcasted to user %s in conversation %s", userID, message.ConversationID)
 					default:
 						h.mu.Lock()
 						close(client.Send)

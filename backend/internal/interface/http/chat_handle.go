@@ -66,10 +66,10 @@ func (h *ChatHandle) CreateConversation(c *gin.Context) {
 	c.JSON(http.StatusCreated, SuccessResponse(res, "Conversation created successfully"))
 }
 
-func (h *ChatHandle) SendMesseage(c *gin.Context) {
-	var req application.SendMesseageRequest
+func (h *ChatHandle) SendMessage(c *gin.Context) {
+	var req application.SendMessageRequest
 	if err := c.ShouldBindBodyWithJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, FailResponse(nil, "Failed to send Messeage: "+err.Error()))
+		c.JSON(http.StatusBadRequest, FailResponse(nil, "Failed to send Message: "+err.Error()))
 		return
 	}
 	userID, exists := c.Get("user_id")
@@ -83,9 +83,9 @@ func (h *ChatHandle) SendMesseage(c *gin.Context) {
 		return
 	}
 	req.SenderID = userIDStr
-	res, err := h.chatService.SendMesseage(req)
+	res, err := h.chatService.SendMessage(req)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, FailResponse(nil, "Send messeage fail with err: "+err.Error()))
+		c.JSON(http.StatusBadRequest, FailResponse(nil, "Send message fail with err: "+err.Error()))
 		return
 	}
 	if h.hub != nil {
@@ -93,14 +93,14 @@ func (h *ChatHandle) SendMesseage(c *gin.Context) {
 			"type":            "new_message",
 			"conversation_id": req.ConversationID,
 			"sender_id":       userIDStr,
-			"messeage":        res.Messeage,
+			"message":         res.Message,
 			"created_at":      res.CreatedAt,
 		})
 
 		h.hub.Broadcast <- &ws.Message{
 			ConversationID: req.ConversationID,
 			SenderID:       userIDStr,
-			Messeage:       string(msgJSON),
+			Message:        string(msgJSON),
 			CreatedAt:      res.CreatedAt,
 			Type:           "new_message",
 		}
@@ -111,12 +111,12 @@ func (h *ChatHandle) SendMesseage(c *gin.Context) {
 func (h *ChatHandle) GetConversation(c *gin.Context) {
 	conversationId := c.Param("id")
 	if conversationId == "" {
-		c.JSON(http.StatusBadRequest, FailResponse(nil, "Failed to send Messeage"))
+		c.JSON(http.StatusBadRequest, FailResponse(nil, "Failed to send Message"))
 		return
 	}
 	res, err := h.chatService.GetConversation(conversationId)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, FailResponse(nil, "Failed to send Messeage"))
+		c.JSON(http.StatusBadRequest, FailResponse(nil, "Failed to send Message"))
 		return
 	}
 	c.JSON(http.StatusCreated, SuccessResponse(res, "Conversation created successfully"))

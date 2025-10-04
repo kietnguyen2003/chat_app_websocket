@@ -22,7 +22,7 @@ Tất cả messages đều có format JSON:
   "type": "message_type",
   "conversation_id": "string",
   "sender_id": "string",
-  "messeage": "string",
+  "message": "string",
   "created_at": 1234567890
 }
 ```
@@ -64,7 +64,7 @@ Gửi tin nhắn mới trong conversation
   "type": "new_message",
   "conversation_id": "conv_123",
   "sender_id": "user_456",
-  "messeage": "Hello world!",
+  "message": "Hello world!",
   "created_at": 1234567890
 }
 ```
@@ -154,7 +154,7 @@ Khi có tin nhắn mới trong conversation bạn đã join
   "type": "new_message",
   "conversation_id": "conv_123",
   "sender_id": "user_456",
-  "messeage": "Hello!",
+  "message": "Hello!",
   "created_at": 1234567890
 }
 ```
@@ -202,7 +202,7 @@ Confirmation khi join conversation thành công
 
 ### 3.3. Khi User gửi Message
 ```
-1. Frontend gửi: { type: "new_message", conversation_id: "...", messeage: "...", ... }
+1. Frontend gửi: { type: "new_message", conversation_id: "...", message: "...", ... }
 2. Server lưu vào DB
 3. Server broadcast đến tất cả participants
 4. Tất cả participants nhận: { type: "new_message", ... }
@@ -288,7 +288,7 @@ function sendMessage(conversationId, text) {
     type: 'new_message',
     conversation_id: conversationId,
     sender_id: myUserId,
-    messeage: text,
+    message: text,
     created_at: Date.now() / 1000
   }));
 }
@@ -308,7 +308,7 @@ function joinConversation(conversationId) {
 ## 7. Lưu ý quan trọng
 
 1. **Join trước khi chat**: Phải gửi `join_conversation` trước khi có thể nhận messages
-2. **Typo**: Backend đang dùng `messeage` (sai chính tả) thay vì `message`
+2. **Typo**: Backend đang dùng `message` (sai chính tả) thay vì `message`
 3. **Timestamp**: `created_at` là Unix timestamp (seconds, không phải milliseconds)
 4. **Broadcast**: Messages chỉ gửi đến users đã join conversation
 5. **Online status**: Tự động broadcast khi connect/disconnect, không cần client gửi

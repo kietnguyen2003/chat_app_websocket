@@ -130,7 +130,7 @@ const ChatPage: React.FC = () => {
               ...conv,
               last_message: {
                 sender_id: wsMessage.sender_id,
-                messeage: wsMessage.messeage,
+                message: wsMessage.message,
                 created_at: wsMessage.created_at,
               }
             };

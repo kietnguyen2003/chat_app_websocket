@@ -43,7 +43,7 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
         console.log('Adding message to conversation:', wsMessage);
         const newMsg: Message = {
           sender_id: wsMessage.sender_id,
-          messeage: wsMessage.messeage,
+          message: wsMessage.message,
           created_at: wsMessage.created_at,
         };
 
@@ -52,7 +52,7 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
           // Check if message already exists (by timestamp and content)
           const isDuplicate = prev.some(msg =>
             msg.sender_id === newMsg.sender_id &&
-            msg.messeage === newMsg.messeage &&
+            msg.message === newMsg.message &&
             Math.abs(msg.created_at - newMsg.created_at) < 2 // Within 2 seconds
           );
 
@@ -124,8 +124,8 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
     setLoading(true);
     try {
       const data = await api.getMessages(conversation.id, accessToken);
-      if (data?.messeages) {
-        setMessages(data.messeages.sort((a, b) => a.created_at - b.created_at));
+      if (data?.messages) {
+        setMessages(data.messages.sort((a, b) => a.created_at - b.created_at));
       } else {
         setMessages([]);
       }
@@ -167,7 +167,7 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
         // Add the message to local state immediately (optimistic update)
         const optimisticMessage: Message = {
           sender_id: user.user_id,
-          messeage: newMessage,
+          message: newMessage,
           created_at: Math.floor(Date.now() / 1000),
         };
         console.log('Adding optimistic message to UI:', optimisticMessage);
@@ -287,7 +287,7 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
                     ? 'bg-gradient-to-br from-indigo-600 to-purple-600 text-white'
                     : 'bg-gray-700/80 backdrop-blur-sm text-white border border-gray-600/50'
                 }`}>
-                  <p className="break-words">{msg.messeage}</p>
+                  <p className="break-words">{msg.message}</p>
                   <span className="text-xs opacity-70 block text-right mt-1">
                     {new Date(msg.created_at * 1000).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}
                   </span>

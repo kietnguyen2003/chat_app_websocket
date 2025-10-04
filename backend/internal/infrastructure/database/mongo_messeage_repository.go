@@ -1,46 +1,46 @@
 package database
 
 import (
-	"backend-chat-app/internal/domain/messeage"
+	"backend-chat-app/internal/domain/message"
 
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
 )
 
-type MongoMesseageRepository struct {
+type MongoMessageRepository struct {
 	client     *mongo.Client
 	database   string
 	collection *mongo.Collection
 }
 
-func NewMongoMesseageRepository(client *mongo.Client, database string) *MongoMesseageRepository {
-	collection := client.Database(database).Collection("messeages")
-	return &MongoMesseageRepository{
+func NewMongoMessageRepository(client *mongo.Client, database string) *MongoMessageRepository {
+	collection := client.Database(database).Collection("messages")
+	return &MongoMessageRepository{
 		client:     client,
 		database:   database,
 		collection: collection,
 	}
 }
 
-func (mm *MongoMesseageRepository) Create(messeage messeage.Messeage) (*messeage.Messeage, error) {
+func (mm *MongoMessageRepository) Create(message message.Message) (*message.Message, error) {
 	ctx, cancel := withContextTimeout()
 	defer cancel()
 
-	convObjectID, err := primitive.ObjectIDFromHex(messeage.ConversationID)
+	convObjectID, err := primitive.ObjectIDFromHex(message.ConversationID)
 	if err != nil {
 		return nil, err
 	}
 
-	senderObjectID, err := primitive.ObjectIDFromHex(messeage.SenderID)
+	senderObjectID, err := primitive.ObjectIDFromHex(message.SenderID)
 	if err != nil {
 		return nil, err
 	}
-	mongoMess := &MongoMesseage{
+	mongoMess := &MongoMessage{
 		ConversationID: convObjectID,
 		Sender:         senderObjectID,
-		Messeage:       messeage.Messeage,
-		CreatedAt:      messeage.CreatedAt.Unix(),
+		Message:        message.Message,
+		CreatedAt:      message.CreatedAt.Unix(),
 	}
 	result, err := mm.collection.InsertOne(ctx, mongoMess)
 	if err != nil {
@@ -49,19 +49,19 @@ func (mm *MongoMesseageRepository) Create(messeage messeage.Messeage) (*messeage
 	if oid, ok := result.InsertedID.(primitive.ObjectID); ok {
 		mongoMess.ID = oid
 	}
-	return mm.toDomainMesseage(*mongoMess), nil
+	return mm.toDomainMessage(*mongoMess), nil
 }
 
-func (mm *MongoMesseageRepository) toDomainMesseage(mongoMesseage MongoMesseage) *messeage.Messeage {
-	return &messeage.Messeage{
-		ConversationID: mongoMesseage.ConversationID.Hex(),
-		SenderID:       mongoMesseage.Sender.Hex(),
-		Messeage:       mongoMesseage.Messeage,
-		CreatedAt:      timeFromUnix(mongoMesseage.CreatedAt),
+func (mm *MongoMessageRepository) toDomainMessage(mongoMessage MongoMessage) *message.Message {
+	return &message.Message{
+		ConversationID: mongoMessage.ConversationID.Hex(),
+		SenderID:       mongoMessage.Sender.Hex(),
+		Message:        mongoMessage.Message,
+		CreatedAt:      timeFromUnix(mongoMessage.CreatedAt),
 	}
 }
 
-func (mm *MongoMesseageRepository) GetMessagesByConversationID(conversationID string) ([]*messeage.Messeage, error) {
+func (mm *MongoMessageRepository) GetMessagesByConversationID(conversationID string) ([]*message.Message, error) {
 	ctx, cancel := withContextTimeout()
 	defer cancel()
 
@@ -76,14 +76,14 @@ func (mm *MongoMesseageRepository) GetMessagesByConversationID(conversationID st
 	}
 	defer cursor.Close(ctx)
 
-	var mongoMessages []MongoMesseage
+	var mongoMessages []MongoMessage
 	if err = cursor.All(ctx, &mongoMessages); err != nil {
 		return nil, err
 	}
 
-	messages := make([]*messeage.Messeage, len(mongoMessages))
+	messages := make([]*message.Message, len(mongoMessages))
 	for i, mongoMess := range mongoMessages {
-		messages[i] = mm.toDomainMesseage(mongoMess)
+		messages[i] = mm.toDomainMessage(mongoMess)
 	}
 
 	return messages, nil

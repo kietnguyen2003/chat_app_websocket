@@ -1,29 +1,29 @@
-package messeage
+package message
 
 import (
 	"errors"
 	"time"
 )
 
-type Messeage struct {
+type Message struct {
 	ID             string
 	ConversationID string
 	SenderID       string
-	Messeage       string
+	Message        string
 	CreatedAt      time.Time
 }
 
-func NewMesseage(conversation_id string, sender_id string, messeage string) (*Messeage, error) {
+func NewMessage(conversation_id string, sender_id string, message string) (*Message, error) {
 	if conversation_id == "" {
 		return nil, errors.New("conversation_id can't empty")
 	}
-	if messeage == "" {
-		return nil, errors.New("messeage can't empty")
+	if message == "" {
+		return nil, errors.New("message can't empty")
 	}
-	return &Messeage{
+	return &Message{
 		ConversationID: conversation_id,
 		SenderID:       sender_id,
-		Messeage:       messeage,
+		Message:        message,
 		CreatedAt:      time.Now(),
 	}, nil
 }

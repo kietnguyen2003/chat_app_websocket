@@ -3,21 +3,21 @@ package chat
 import (
 	"backend-chat-app/internal/application"
 	"backend-chat-app/internal/domain/conversation"
-	"backend-chat-app/internal/domain/messeage"
+	"backend-chat-app/internal/domain/message"
 	"backend-chat-app/internal/domain/user"
 	"errors"
 	"fmt"
 )
 
 type ChatService struct {
-	messeageRepo     messeage.MesseageRepository
+	messageRepo      message.MessageRepository
 	conversationRepo conversation.ConversationRepository
 	userRepo         user.UserRepository
 }
 
-func NewChatService(messeageRepo messeage.MesseageRepository, conversationRepo conversation.ConversationRepository, userRepo user.UserRepository) *ChatService {
+func NewChatService(messageRepo message.MessageRepository, conversationRepo conversation.ConversationRepository, userRepo user.UserRepository) *ChatService {
 	return &ChatService{
-		messeageRepo:     messeageRepo,
+		messageRepo:      messageRepo,
 		conversationRepo: conversationRepo,
 		userRepo:         userRepo,
 	}
@@ -83,39 +83,39 @@ func (s *ChatService) CreateConversation(req application.CreateConversationReque
 	}, nil
 }
 
-func (s *ChatService) SendMesseage(req application.SendMesseageRequest) (*application.SendMesseageResponse, error) {
-	messeage, err := messeage.NewMesseage(req.ConversationID, req.SenderID, req.Messeage)
+func (s *ChatService) SendMessage(req application.SendMessageRequest) (*application.SendMessageResponse, error) {
+	message, err := message.NewMessage(req.ConversationID, req.SenderID, req.Message)
 	if err != nil {
-		return nil, errors.New("send messeage failed at NewMesseage: " + err.Error())
+		return nil, errors.New("send message failed at NewMessage: " + err.Error())
 	}
-	res, err := s.messeageRepo.Create(*messeage)
+	res, err := s.messageRepo.Create(*message)
 	if err != nil {
-		return nil, errors.New("send messeage failed at CreateMesseage: " + err.Error())
+		return nil, errors.New("send message failed at CreateMessage: " + err.Error())
 	}
 
-	return &application.SendMesseageResponse{
-		Messeage:  res.Messeage,
+	return &application.SendMessageResponse{
+		Message:   res.Message,
 		CreatedAt: res.CreatedAt.Unix(),
 	}, nil
 }
 
-func (s *ChatService) GetConversation(conversationID string) (*application.GetConversationMesseageResponse, error) {
+func (s *ChatService) GetConversation(conversationID string) (*application.GetConversationMessageResponse, error) {
 
-	messeages, err := s.messeageRepo.GetMessagesByConversationID(conversationID)
+	messages, err := s.messageRepo.GetMessagesByConversationID(conversationID)
 	if err != nil {
 		return nil, err
 	}
-	// Convert *[]messeage.Messeage to []application.Messeage
-	var appMesseages []application.Messeage
-	for _, m := range messeages {
-		appMesseages = append(appMesseages, application.Messeage{
+	// Convert *[]message.Message to []application.Message
+	var appMessages []application.Message
+	for _, m := range messages {
+		appMessages = append(appMessages, application.Message{
 			SenderID:  m.SenderID,
-			Messeage:  m.Messeage,
+			Message:   m.Message,
 			CreatedAt: m.CreatedAt.Unix(),
 		})
 	}
-	return &application.GetConversationMesseageResponse{
+	return &application.GetConversationMessageResponse{
 		ConversationID: conversationID,
-		Messeages:      appMesseages,
+		Messages:       appMessages,
 	}, nil
 }

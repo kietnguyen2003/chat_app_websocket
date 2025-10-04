@@ -129,15 +129,15 @@ func (h *WebSocketHandle) readPump(client *ws.Client) {
 			h.hub.Broadcast <- &msg
 		case "new_message":
 			log.Printf("Processing new message from %s in conversation %s: %s",
-				msg.SenderID, msg.ConversationID, msg.Messeage)
-			req := &application.SendMesseageRequest{
+				msg.SenderID, msg.ConversationID, msg.Message)
+			req := &application.SendMessageRequest{
 				ConversationID: msg.ConversationID,
 				SenderID:       msg.SenderID,
-				Messeage:       msg.Messeage,
+				Message:        msg.Message,
 			}
-			res, err := h.chatService.SendMesseage(*req)
+			res, err := h.chatService.SendMessage(*req)
 			if err != nil {
-				log.Printf("Failed to save messeage to DB: %v", err)
+				log.Printf("Failed to save message to DB: %v", err)
 			} else {
 				log.Printf("Message saved to DB successfully. Created at: %d", res.CreatedAt)
 			}

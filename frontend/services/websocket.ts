@@ -6,7 +6,7 @@ export interface WSMessage {
   type: WSMessageType;
   conversation_id: string;
   sender_id: string;
-  messeage: string;
+  message: string;
   created_at: number;
 }
 
@@ -61,10 +61,10 @@ class WebSocketService {
             try {
               const parsed = JSON.parse(event.data);
 
-              // Check if it's a nested JSON (messeage field contains stringified JSON)
-              if (parsed.messeage && typeof parsed.messeage === 'string') {
+              // Check if it's a nested JSON (message field contains stringified JSON)
+              if (parsed.message && typeof parsed.message === 'string') {
                 try {
-                  const nestedMsg = JSON.parse(parsed.messeage);
+                  const nestedMsg = JSON.parse(parsed.message);
                   // If successful, use the nested message
                   message = nestedMsg;
                   console.log('Parsed nested JSON message:', message);
@@ -82,7 +82,7 @@ class WebSocketService {
                 type: 'message_received',
                 conversation_id: '', // Will be set by context
                 sender_id: '', // Unknown sender
-                messeage: event.data,
+                message: event.data,
                 created_at: Math.floor(Date.now() / 1000),
               };
             }
@@ -151,7 +151,7 @@ class WebSocketService {
       type: 'join_conversation',
       conversation_id: conversationId,
       sender_id: userId,
-      messeage: '',
+      message: '',
       created_at: Math.floor(Date.now() / 1000),
     };
 
@@ -176,7 +176,7 @@ class WebSocketService {
       type: 'new_message',
       conversation_id: conversationId,
       sender_id: senderId,
-      messeage: messageText,
+      message: messageText,
       created_at: Math.floor(Date.now() / 1000),
     };
 

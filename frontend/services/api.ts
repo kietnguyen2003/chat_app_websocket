@@ -149,8 +149,8 @@ export const getConversations = async (token: string, currentUserId: string, cur
           id: conv.conversation_id,
           participants: participants,
           name: conversationName,
-          last_message: messagesData?.messeages && messagesData.messeages.length > 0
-            ? messagesData.messeages[messagesData.messeages.length - 1]
+          last_message: messagesData?.messages && messagesData.messages.length > 0
+            ? messagesData.messages[messagesData.messages.length - 1]
             : undefined
         } as Conversation;
       } catch (error) {
@@ -221,9 +221,9 @@ export const createConversation = async (friend_phone: string, token: string): P
   return { id: data.conversation_id };
 };
 
-export const getMessages = async (conversationId: string, token: string): Promise<{ conversation_id: string; messeages: Message[] }> => {
+export const getMessages = async (conversationId: string, token: string): Promise<{ conversation_id: string; messages: Message[] }> => {
 
-  const data = await apiRequest<{ conversation_id: string; messeages: Message[] }>(
+  const data = await apiRequest<{ conversation_id: string; messages: Message[] }>(
     `/chat/conversation/${conversationId}`,
     {
       method: 'GET',
@@ -234,11 +234,11 @@ export const getMessages = async (conversationId: string, token: string): Promis
   return data;
 };
 
-export const sendMessage = async (conversation_id: string, messeage: string, token: string): Promise<{ messeage: string; created_at: number }> => {
+export const sendMessage = async (conversation_id: string, message: string, token: string): Promise<{ message: string; created_at: number }> => {
 
-  const data = await apiRequest<{ messeage: string; created_at: number }>('/chat/send', {
+  const data = await apiRequest<{ message: string; created_at: number }>('/chat/send', {
     method: 'POST',
-    body: JSON.stringify({ conversation_id, messeage }),
+    body: JSON.stringify({ conversation_id, message }),
     headers: { Authorization: `Bearer ${token}` },
   });
 

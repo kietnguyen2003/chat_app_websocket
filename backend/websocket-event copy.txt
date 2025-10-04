@@ -14,7 +14,7 @@ Refactor WebSocket Events
       loginResponse := ws.Message{
           Type:      "online_users",
           SenderID:  client.ID,
-          Messeage:  strings.Join(onlineUsers, ","), // Hoặc JSON encode
+          Message:  strings.Join(onlineUsers, ","), // Hoặc JSON encode
           CreatedAt: time.Now().Unix(),
       }
       loginJSON, _ := json.Marshal(loginResponse)
@@ -46,7 +46,7 @@ Refactor WebSocket Events
       type: 'login',
       sender_id: userId,
       conversation_id: '',
-      messeage: '',
+      message: '',
       created_at: Math.floor(Date.now() / 1000),
     };
     this.ws.send(JSON.stringify(message));
@@ -59,7 +59,7 @@ Refactor WebSocket Events
       type: 'logout',
       sender_id: userId,
       conversation_id: '',
-      messeage: '',
+      message: '',
       created_at: Math.floor(Date.now() / 1000),
     };
     this.ws.send(JSON.stringify(message));
@@ -72,7 +72,7 @@ Refactor WebSocket Events
       type: 'new_conversation',
       conversation_id: conversationId,
       sender_id: participants[0], // Current user
-      messeage: participants.join(','), // All participant IDs
+      message: participants.join(','), // All participant IDs
       created_at: Math.floor(Date.now() / 1000),
     };
     this.ws.send(JSON.stringify(message));
@@ -122,8 +122,8 @@ Refactor WebSocket Events
   new_conversation:
 
   case "new_conversation":
-      // msg.Messeage chứa "user1_id,user2_id"
-      participants := strings.Split(msg.Messeage, ",")
+      // msg.Message chứa "user1_id,user2_id"
+      participants := strings.Split(msg.Message, ",")
       for _, participantID := range participants {
           h.hub.JoinConversation(msg.ConversationID, participantID)
       }

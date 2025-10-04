@@ -19,12 +19,12 @@ type MongoUser struct {
 	UpdateAt           int64                `bson:"update_at"`
 }
 
-// Messeage Table
-type MongoMesseage struct {
+// Message Table
+type MongoMessage struct {
 	ID             primitive.ObjectID `bson:"_id,omitempty"`
 	ConversationID primitive.ObjectID `bson:"conversation_id"`
 	Sender         primitive.ObjectID `bson:"sender_id"`
-	Messeage       string             `bson:"messeage"`
+	Message        string             `bson:"message"`
 	CreatedAt      int64              `bson:"created_at"`
 }
 
