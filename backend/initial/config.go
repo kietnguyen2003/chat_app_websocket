@@ -1,7 +1,6 @@
 package initial
 
 import (
-	"log"
 	"os"
 
 	"github.com/joho/godotenv"
@@ -19,9 +18,6 @@ func LoadConfig() *Config {
 		Port:   getEnv("PORT", "8080"),
 		DBUrl:  getEnv("MONGO_URL", "default-db-url"),
 		JWTKey: getEnv("JWT_SECRET", "default-jwt-secret"),
-	}
-	if config.DBUrl == "default-db-url" {
-		log.Println("Crash")
 	}
 	return config
 }
