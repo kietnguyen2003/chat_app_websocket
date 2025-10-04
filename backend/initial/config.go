@@ -1,6 +1,7 @@
 package initial
 
 import (
+	"log"
 	"os"
 
 	"github.com/joho/godotenv"
@@ -10,7 +11,6 @@ type Config struct {
 	Port   string
 	DBUrl  string
 	JWTKey string
-	DBName string
 }
 
 func LoadConfig() *Config {
@@ -19,7 +19,9 @@ func LoadConfig() *Config {
 		Port:   getEnv("PORT", "8080"),
 		DBUrl:  getEnv("DATABASE_URL", "default-db-url"),
 		JWTKey: getEnv("JWT_SECRET", "default-jwt-secret"),
-		DBName: getEnv("DBNAME", "default-db-name"),
+	}
+	if config.DBUrl == "default-db-url" {
+		log.Println("Crash")
 	}
 	return config
 }
