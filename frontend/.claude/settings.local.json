@@ -1,0 +1,10 @@
+{
+  "permissions": {
+    "allow": [
+      "Read(//d/GoTutotial/project/3.chatapp/backend/internal/interface/http/**)",
+      "Read(//d/GoTutotial/project/3.chatapp/backend/internal/interface/http/middleware/**)"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}
