@@ -17,7 +17,7 @@ func LoadConfig() *Config {
 	_ = godotenv.Load(".env")
 	config := &Config{
 		Port:   getEnv("PORT", "8080"),
-		DBUrl:  getEnv("DATABASE_URL", getEnv("MONGO_URL", "")),
+		DBUrl:  getEnv("MONGO_URL", "default-db-url"),
 		JWTKey: getEnv("JWT_SECRET", "default-jwt-secret"),
 	}
 	if config.DBUrl == "default-db-url" {
