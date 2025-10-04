@@ -14,9 +14,7 @@ type Config struct {
 }
 
 func LoadConfig() *Config {
-	if err := godotenv.Load("../.env"); err != nil {
-		panic("No .env file found, using system environment variables")
-	}
+	_ = godotenv.Load("../.env")
 	config := &Config{
 		Port:   getEnv("PORT", "8080"),
 		DBUrl:  getEnv("DATABASE_URL", "default-db-url"),
