@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import Sidebar from './Sidebar';
 import ChatWindow from './ChatWindow';
 import { Conversation, User, WSMessage } from '../../types';
@@ -124,26 +124,29 @@ const ChatPage: React.FC = () => {
 
       // Update last_message in conversations list
       setConversations(prev => {
-        const updated = prev.map(conv => {
-          if (conv.id === wsMessage.conversation_id) {
-            return {
-              ...conv,
-              last_message: {
-                sender_id: wsMessage.sender_id,
-                message: wsMessage.message,
-                created_at: wsMessage.created_at,
-              }
-            };
+        // Find if conversation exists
+        const convIndex = prev.findIndex(c => c.id === wsMessage.conversation_id);
+        if (convIndex === -1) return prev;
+
+        // Create new array with updated conversation
+        const updated = [...prev];
+        updated[convIndex] = {
+          ...updated[convIndex],
+          last_message: {
+            sender_id: wsMessage.sender_id,
+            message: wsMessage.message,
+            created_at: wsMessage.created_at,
           }
-          return conv;
-        });
+        };
 
         // Re-sort by last_message time
-        return updated.sort((a, b) => {
+        updated.sort((a, b) => {
           const timeA = a.last_message?.created_at || 0;
           const timeB = b.last_message?.created_at || 0;
           return timeB - timeA;
         });
+
+        return updated;
       });
 
       // ChatWindow will handle this via its own message handler
@@ -255,7 +258,6 @@ const ChatPage: React.FC = () => {
       )}
       <ChatWindow
         conversation={selectedConversation}
-        key={selectedConversation?.id}
         isSidebarVisible={isSidebarVisible}
         onToggleSidebar={toggleSidebar}
         onlineUsers={onlineUsers}

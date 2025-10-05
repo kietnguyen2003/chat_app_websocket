@@ -141,7 +141,7 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
   useEffect(() => {
     fetchMessages();
      // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [conversation]);
+  }, [conversation?.id]);
   
   useEffect(() => {
     scrollToBottom();
@@ -249,12 +249,6 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
             {wsError && (
               <span className="text-xs text-red-400">{wsError}</span>
             )}
-            <div className={`flex items-center space-x-1 px-2 py-1 rounded-full ${isConnected ? 'bg-green-500/20' : 'bg-gray-500/20'}`}>
-              <div className={`w-1.5 h-1.5 rounded-full ${isConnected ? 'bg-green-500' : 'bg-gray-500'}`}></div>
-              <span className={`text-xs ${isConnected ? 'text-green-400' : 'text-gray-400'}`}>
-                {isConnected ? 'Real-time' : 'Offline'}
-              </span>
-            </div>
           </div>
         </div>
       </div>
