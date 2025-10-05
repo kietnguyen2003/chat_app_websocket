@@ -205,6 +205,11 @@ const ChatPage: React.FC = () => {
     if (user?.user_id) {
       localStorage.setItem(`current_chat_${user.user_id}`, JSON.stringify(conversation));
     }
+
+    // Auto-hide sidebar on mobile when conversation is selected
+    if (window.innerWidth < 768) {
+      setIsSidebarVisible(false);
+    }
   };
 
   const handleNewConversation = async (friend: User) => {

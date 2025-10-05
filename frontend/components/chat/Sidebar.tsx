@@ -27,7 +27,7 @@ const Sidebar: React.FC<SidebarProps> = ({ conversations, onSelectConversation, 
   console.log('🔍 Sidebar unreadConversations:', Array.from(unreadConversations));
 
   return (
-    <div className="w-1/3 xl:w-1/4 bg-gradient-to-b from-gray-900 to-gray-950 flex flex-col border-r border-gray-700/50">
+    <div className="w-full md:w-1/3 xl:w-1/4 bg-gradient-to-b from-gray-900 to-gray-950 flex flex-col border-r border-gray-700/50 absolute md:relative h-full z-20 md:z-0">
       <div className="p-4 border-b border-gray-700/50 bg-gray-900/50 backdrop-blur-sm">
         <div className="flex items-center space-x-3">
           <button
