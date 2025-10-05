@@ -186,8 +186,8 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
     }
   };
   
-  const containerClasses = isSidebarVisible 
-    ? "w-2/3 xl:w-3/4 flex flex-col bg-gray-800"
+  const containerClasses = isSidebarVisible
+    ? "w-full md:w-2/3 xl:w-3/4 flex flex-col bg-gray-800"
     : "w-full flex flex-col bg-gray-800";
 
 
@@ -259,7 +259,7 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
         </div>
       </div>
 
-      <div className="flex-1 p-6 overflow-y-auto bg-gradient-to-b from-gray-800 to-gray-900 scrollbar-thin scrollbar-thumb-gray-700 scrollbar-track-transparent">
+      <div className="flex-1 p-3 sm:p-6 overflow-y-auto bg-gradient-to-b from-gray-800 to-gray-900 scrollbar-thin scrollbar-thumb-gray-700 scrollbar-track-transparent">
         {loading ? (
           <div className="flex flex-col items-center justify-center h-full space-y-3">
             <svg className="animate-spin h-8 w-8 text-indigo-500" fill="none" viewBox="0 0 24 24">
@@ -282,7 +282,7 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
           <>
             {messages.map((msg, index) => (
               <div key={index} className={`flex ${msg.sender_id === user?.user_id ? 'justify-end' : 'justify-start'} mb-4 animate-fade-in`}>
-                <div className={`max-w-md lg:max-w-lg xl:max-w-xl p-3 rounded-2xl shadow-lg ${
+                <div className={`max-w-[85%] sm:max-w-md lg:max-w-lg xl:max-w-xl p-3 rounded-2xl shadow-lg ${
                   msg.sender_id === user?.user_id
                     ? 'bg-gradient-to-br from-indigo-600 to-purple-600 text-white'
                     : 'bg-gray-700/80 backdrop-blur-sm text-white border border-gray-600/50'
@@ -299,19 +299,19 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
         )}
       </div>
 
-      <div className="p-4 bg-gradient-to-r from-gray-900 to-gray-900/80 border-t border-gray-700/50">
-        <form onSubmit={handleSendMessage} className="flex space-x-3">
+      <div className="p-3 sm:p-4 bg-gradient-to-r from-gray-900 to-gray-900/80 border-t border-gray-700/50">
+        <form onSubmit={handleSendMessage} className="flex space-x-2 sm:space-x-3">
           <input
             type="text"
             value={newMessage}
             onChange={(e) => setNewMessage(e.target.value)}
             placeholder="Type a message..."
-            className="flex-1 bg-gray-700/50 border border-gray-600 rounded-full px-5 py-3 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent text-white placeholder-gray-400 transition-all duration-200"
+            className="flex-1 bg-gray-700/50 border border-gray-600 rounded-full px-4 sm:px-5 py-2.5 sm:py-3 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent text-white placeholder-gray-400 transition-all duration-200 text-sm sm:text-base"
           />
           <button
             type="submit"
             disabled={!newMessage.trim()}
-            className="bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-full px-6 py-3 hover:from-indigo-700 hover:to-purple-700 transition-all duration-200 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
+            className="bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-full px-4 sm:px-6 py-2.5 sm:py-3 hover:from-indigo-700 hover:to-purple-700 transition-all duration-200 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
           >
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
