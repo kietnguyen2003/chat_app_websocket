@@ -213,7 +213,7 @@ Confirmation khi join conversation thành công
 1. Frontend gọi API POST /conversations (không phải WebSocket)
 2. Server tạo conversation, lưu DB
 3. Server tự động gửi WebSocket: { type: "new_conversation", ... } đến recipient
-4. Recipient nhận notification real-time
+4. Recipient nhận notification 
 ```
 
 ---
