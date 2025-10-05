@@ -17,7 +17,7 @@ func LoadConfig() *Config {
 	_ = godotenv.Load(".env")
 	config := &Config{
 		Port:   getEnv("PORT", "8080"),
-		DBUrl:  getEnv("DATABASE_URL_LOCAL", "mongodb://localhost:27017/chat-app"),
+		DBUrl:  getEnv("MONGO_URL", "mongodb://localhost:27017/chat-app"),
 		JWTKey: getEnv("JWT_SECRET", "default-jwt-secret"),
 	}
 	fmt.Println(config.DBUrl)
