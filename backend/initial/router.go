@@ -32,7 +32,7 @@ func SetupRouter(r *gin.Engine, JWTSecret string, client *mongo.Client) (*gin.En
 	wsHandle := http.NewWebSocketHandle(hub, chatService)
 
 	r.Use(cors.New(cors.Config{
-		AllowOrigins:     []string{"https://kitdev.vercel.app"},
+		AllowOrigins:     []string{"https://kitdev.vercel.app", "http://localhost:8080"},
 		AllowMethods:     []string{"GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"},
 		AllowHeaders:     []string{"Origin", "Content-Type", "Authorization"},
 		AllowCredentials: true,
