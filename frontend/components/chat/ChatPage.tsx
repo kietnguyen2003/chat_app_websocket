@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import Sidebar from './Sidebar';
 import ChatWindow from './ChatWindow';
 import { Conversation, User, WSMessage } from '../../types';
@@ -243,29 +243,62 @@ const ChatPage: React.FC = () => {
   };
 
   return (
-    <div className="flex h-screen w-screen bg-gray-800 text-white">
-      {isSidebarVisible && (
-        <Sidebar
-          conversations={conversations}
-          onSelectConversation={handleSelectConversation}
-          selectedConversationId={selectedConversation?.id}
-          onNewConversation={handleNewConversation}
-          loading={loading}
-          onToggleSidebar={toggleSidebar}
-          onlineUsers={onlineUsers}
-          unreadConversations={unreadConversations}
-        />
-      )}
-      <ChatWindow
-        conversation={selectedConversation}
-        isSidebarVisible={isSidebarVisible}
-        onToggleSidebar={toggleSidebar}
-        onlineUsers={onlineUsers}
-        isConnected={isConnected}
-        wsSendMessage={wsSendMessage}
-        joinConversation={joinConversation}
-        wsError={wsError}
-      />
+    <div className="app-shell">
+      {/* Top Navigation Bar as shown in mockup */}
+      <header className="top-navbar">
+        <div className="nav-search-wrap">
+          <svg className="icon-sm nav-search-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+          </svg>
+          <input
+            type="text"
+            placeholder="Search"
+            className="nav-search-input"
+          />
+        </div>
+
+        <div className="nav-user-profile">
+          <span className="nav-greeting">
+            Hello, <span className="nav-user-name">{user?.name || user?.username || 'User'}</span>
+          </span>
+          <div className="nav-avatar">
+            {user?.name?.[0]?.toUpperCase() || user?.username?.[0]?.toUpperCase() || 'U'}
+          </div>
+          <svg className="icon-sm nav-dropdown-arrow" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+          </svg>
+        </div>
+      </header>
+
+      {/* Main Content Area */}
+      <main className="main-content">
+        <h1 className="page-title">Chat</h1>
+
+        <div className="chat-shell">
+          <Sidebar
+            conversations={conversations}
+            onSelectConversation={handleSelectConversation}
+            selectedConversationId={selectedConversation?.id}
+            onNewConversation={handleNewConversation}
+            loading={loading}
+            onToggleSidebar={toggleSidebar}
+            onlineUsers={onlineUsers}
+            unreadConversations={unreadConversations}
+            isSidebarVisible={isSidebarVisible}
+          />
+
+          <ChatWindow
+            conversation={selectedConversation}
+            isSidebarVisible={isSidebarVisible}
+            onToggleSidebar={toggleSidebar}
+            onlineUsers={onlineUsers}
+            isConnected={isConnected}
+            wsSendMessage={wsSendMessage}
+            joinConversation={joinConversation}
+            wsError={wsError}
+          />
+        </div>
+      </main>
     </div>
   );
 };

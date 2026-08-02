@@ -23,8 +23,8 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
   onToggleSidebar,
   onlineUsers,
   isConnected,
-  wsSendMessage,
-  joinConversation,
+  wsSendMessage: _wsSendMessage,
+  joinConversation: _joinConversation,
   wsError
 }) => {
   const [messages, setMessages] = useState<Message[]>([]);
@@ -187,133 +187,164 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
   };
   
   const containerClasses = isSidebarVisible
-    ? "w-full md:w-2/3 xl:w-3/4 flex flex-col bg-gray-800"
-    : "w-full flex flex-col bg-gray-800";
+    ? "chat-window"
+    : "chat-window chat-window-expanded";
 
 
   if (!conversation) {
-    const placeholderContainerClasses = `${containerClasses.replace('flex-col', 'items-center justify-center')} relative`;
     return (
-      <div className={placeholderContainerClasses}>
-         {!isSidebarVisible && (
-            <button onClick={onToggleSidebar} className="absolute top-5 left-4 text-gray-400 hover:text-white" aria-label="Show sidebar">
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
-                </svg>
-            </button>
-         )}
-        <p className="text-gray-400">Select a conversation to start chatting</p>
-      </div>
+      <section className="chat-window-card">
+        <div className="empty-state">
+          <div className="empty-state-icon">
+            <svg className="icon-lg" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+            </svg>
+          </div>
+          <h2 className="empty-state-title">Select a Conversation</h2>
+          <p className="empty-state-text">
+            Choose a contact from the left list to start messaging in real-time.
+          </p>
+        </div>
+      </section>
     );
   }
 
   const conversationPartner = conversation.participants.find(p => p.user_id !== user?.user_id);
-
+  const isPeerOnline = conversationPartner ? onlineUsers.has(conversationPartner.user_id) : false;
 
   return (
-    <div className={containerClasses}>
-      <div className="p-4 border-b border-gray-700/50 bg-gradient-to-r from-gray-900 to-gray-900/80 backdrop-blur-sm flex items-center space-x-4">
-        {!isSidebarVisible && (
-          <button
-            onClick={onToggleSidebar}
-            className="text-gray-400 hover:text-white transition-colors duration-200"
-            aria-label="Show sidebar"
-          >
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
-            </svg>
-          </button>
-        )}
-        <div className="flex items-center justify-between flex-1">
-          <div className="flex items-center space-x-3">
-            <div className="w-10 h-10 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center text-white font-semibold shadow-lg">
-              {conversationPartner?.name?.[0]?.toUpperCase() || 'C'}
+    <section className="chat-window-card">
+      {/* Header */}
+      <div className="chat-header">
+        <div className="chat-header-user">
+          {!isSidebarVisible && (
+            <button onClick={onToggleSidebar} className="action-button" aria-label="Show sidebar">
+              <svg className="icon-md" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+              </svg>
+            </button>
+          )}
+
+          <div className="conversation-avatar-wrap">
+            <div className="chat-header-avatar">
+              {conversationPartner?.name?.[0]?.toUpperCase() || conversation?.name?.[0]?.toUpperCase() || 'C'}
             </div>
-            <div>
-              <h2 className="text-lg font-semibold text-white">{conversationPartner?.name || 'Chat'}</h2>
-              <div className="flex items-center space-x-1">
-                {conversationPartner && onlineUsers.has(conversationPartner.user_id) ? (
-                  <>
-                    <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-                    <span className="text-xs text-gray-400">Active now</span>
-                  </>
-                ) : (
-                  <span className="text-xs text-gray-500">Offline</span>
-                )}
-              </div>
-            </div>
+            <span className={`presence-dot ${isPeerOnline ? 'presence-online' : ''}`}></span>
           </div>
 
-          {/* WebSocket status indicator */}
-          <div className="flex items-center space-x-2">
-            {wsError && (
-              <span className="text-xs text-red-400">{wsError}</span>
-            )}
+          <div className="chat-header-meta">
+            <h2 className="chat-header-name">{conversationPartner?.name || conversation.name}</h2>
+            <span className="chat-header-status">
+              {isPeerOnline ? 'Active Now' : 'Offline'}
+            </span>
           </div>
+        </div>
+
+        <div className="chat-header-actions">
+          <button className="action-button" title="Search in conversation">
+            <svg className="icon-md" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+            </svg>
+          </button>
+          <button className="action-button" title="Settings">
+            <svg className="icon-md" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+            </svg>
+          </button>
         </div>
       </div>
 
-      <div className="flex-1 p-3 sm:p-6 overflow-y-auto bg-gradient-to-b from-gray-800 to-gray-900 scrollbar-thin scrollbar-thumb-gray-700 scrollbar-track-transparent">
+      {/* Message Thread */}
+      <div className="message-thread">
         {loading ? (
-          <div className="flex flex-col items-center justify-center h-full space-y-3">
-            <svg className="animate-spin h-8 w-8 text-indigo-500" fill="none" viewBox="0 0 24 24">
+          <div className="empty-state">
+            <svg className="spinner" fill="none" viewBox="0 0 24 24">
               <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
               <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
             </svg>
-            <p className="text-sm text-gray-400">Loading messages...</p>
+            <p className="empty-state-text" style={{ marginTop: 12 }}>Loading messages...</p>
           </div>
         ) : messages.length === 0 ? (
-          <div className="flex flex-col items-center justify-center h-full text-center">
-            <div className="w-20 h-20 mb-4 rounded-full bg-gray-800/50 flex items-center justify-center">
-              <svg className="w-10 h-10 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <div className="empty-state">
+            <div className="empty-state-icon">
+              <svg className="icon-lg" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
               </svg>
             </div>
-            <p className="text-gray-400 mb-2">No messages yet</p>
-            <p className="text-sm text-gray-500">Send a message to start the conversation</p>
+            <h3 className="empty-state-title">No messages yet</h3>
+            <p className="empty-state-text">Send the first message to start the conversation.</p>
           </div>
         ) : (
           <>
-            {messages.map((msg, index) => (
-              <div key={index} className={`flex ${msg.sender_id === user?.user_id ? 'justify-end' : 'justify-start'} mb-4 animate-fade-in`}>
-                <div className={`max-w-[85%] sm:max-w-md lg:max-w-lg xl:max-w-xl p-3 rounded-2xl shadow-lg ${
-                  msg.sender_id === user?.user_id
-                    ? 'bg-gradient-to-br from-indigo-600 to-purple-600 text-white'
-                    : 'bg-gray-700/80 backdrop-blur-sm text-white border border-gray-600/50'
-                }`}>
-                  <p className="break-words">{msg.message}</p>
-                  <span className="text-xs opacity-70 block text-right mt-1">
-                    {new Date(msg.created_at * 1000).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}
-                  </span>
+            {messages.map((msg, index) => {
+              const isOwn = msg.sender_id === user?.user_id;
+
+              return (
+                <div
+                  key={index}
+                  className={`message-row ${isOwn ? 'message-row-own' : 'message-row-peer'} animate-fade-in`}
+                >
+                  <div className={`message-avatar ${isOwn ? 'own-avatar' : 'peer-avatar'}`}>
+                    {isOwn
+                      ? user?.name?.[0]?.toUpperCase() || user?.username?.[0]?.toUpperCase() || 'U'
+                      : conversationPartner?.name?.[0]?.toUpperCase() || 'C'}
+                  </div>
+
+                  <div className="message-body-wrap">
+                    <div className={`message-bubble ${isOwn ? 'message-bubble-own' : 'message-bubble-peer'}`}>
+                      <p className="message-text">{msg.message}</p>
+                    </div>
+
+                    <span className="message-time">
+                      {new Date(msg.created_at * 1000).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                    </span>
+                  </div>
                 </div>
-              </div>
-            ))}
+              );
+            })}
             <div ref={messagesEndRef} />
           </>
         )}
       </div>
 
-      <div className="p-3 sm:p-4 bg-gradient-to-r from-gray-900 to-gray-900/80 border-t border-gray-700/50">
-        <form onSubmit={handleSendMessage} className="flex space-x-2 sm:space-x-3">
+      {/* Composer */}
+      <div className="chat-composer-wrap">
+        <form onSubmit={handleSendMessage} className="chat-composer">
           <input
             type="text"
             value={newMessage}
             onChange={(e) => setNewMessage(e.target.value)}
-            placeholder="Type a message..."
-            className="flex-1 bg-gray-700/50 border border-gray-600 rounded-full px-4 sm:px-5 py-2.5 sm:py-3 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent text-white placeholder-gray-400 transition-all duration-200 text-base"
+            placeholder="Type a message"
+            className="chat-input"
           />
-          <button
-            type="submit"
-            disabled={!newMessage.trim()}
-            className="bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-full px-4 sm:px-6 py-2.5 sm:py-3 hover:from-indigo-700 hover:to-purple-700 transition-all duration-200 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
-          >
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
-            </svg>
-          </button>
+
+          <div className="composer-actions">
+            <button type="button" className="composer-icon-btn" title="Emoji">
+              <svg className="icon-md" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14.828 14.828a4 4 0 01-5.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+            </button>
+            <button type="button" className="composer-icon-btn" title="Attachment">
+              <svg className="icon-md" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13" />
+              </svg>
+            </button>
+
+            <button
+              type="submit"
+              disabled={!newMessage.trim()}
+              className="send-button"
+            >
+              <span>Send</span>
+              <svg className="icon-sm" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
+              </svg>
+            </button>
+          </div>
         </form>
       </div>
-    </div>
+    </section>
   );
 };
 
