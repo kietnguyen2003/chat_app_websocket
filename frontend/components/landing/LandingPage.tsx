@@ -11,12 +11,8 @@ const LandingPage: React.FC<LandingPageProps> = ({ onLaunchApp }) => {
       {/* Top Navbar */}
       <header className="landing-navbar">
         <div className="landing-nav-brand" onClick={onLaunchApp}>
-          <div className="landing-logo-badge">
-            <svg className="icon-md" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
-            </svg>
-          </div>
-          <span className="landing-brand-title">Spotlight Chat</span>
+          <img src="/assets/logo-icon.png" alt="Logo" className="landing-brand-logo-img" />
+          <span className="landing-brand-title">ChatApp</span>
         </div>
 
         <nav className="landing-nav-links">
@@ -176,11 +172,14 @@ const LandingPage: React.FC<LandingPageProps> = ({ onLaunchApp }) => {
       <footer className="landing-footer">
         <div className="footer-content">
           <div className="footer-brand">
-            <span className="footer-logo">Spotlight Chat</span>
+            <div style={{ display: 'flex', itemsCenter: 'center', gap: 10 }}>
+              <img src="/assets/logo-icon.png" alt="Logo" className="footer-logo-img" />
+              <span className="footer-logo">ChatApp</span>
+            </div>
             <p className="footer-tagline">Clean, fast, realtime messaging system.</p>
           </div>
           <div className="footer-copy">
-            &copy; {new Date().getFullYear()} Spotlight Chat. Built with React 19, WebSockets &amp; Motion.
+            &copy; {new Date().getFullYear()} ChatApp. Built with React 19 &amp; WebSockets.
           </div>
         </div>
       </footer>
