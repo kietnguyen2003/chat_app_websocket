@@ -11,10 +11,13 @@ import (
 )
 
 func NewMongoConnection(mongoURI string) *mongo.Client {
-	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
 	defer cancel()
 
-	clientOptions := options.Client().ApplyURI(mongoURI).SetServerSelectionTimeout(30 * time.Second).SetConnectTimeout(30 * time.Second).SetTLSConfig(nil)
+	clientOptions := options.Client().
+		ApplyURI(mongoURI).
+		SetServerSelectionTimeout(30 * time.Second).
+		SetConnectTimeout(30 * time.Second)
 
 	client, err := mongo.Connect(ctx, clientOptions)
 	if err != nil {

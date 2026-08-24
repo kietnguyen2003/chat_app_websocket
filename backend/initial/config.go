@@ -1,7 +1,6 @@
 package initial
 
 import (
-	"fmt"
 	"os"
 
 	"github.com/joho/godotenv"
@@ -15,12 +14,17 @@ type Config struct {
 
 func LoadConfig() *Config {
 	_ = godotenv.Load(".env")
+
+	dbURL := getEnv("MONGO_URL", "")
+	if dbURL == "" {
+		dbURL = getEnv("DATABASE_URL", "mongodb://localhost:27017/chat-app")
+	}
+
 	config := &Config{
 		Port:   getEnv("PORT", "8080"),
-		DBUrl:  getEnv("MONGO_URL", "mongodb://localhost:27017/chat-app"),
+		DBUrl:  dbURL,
 		JWTKey: getEnv("JWT_SECRET", "default-jwt-secret"),
 	}
-	fmt.Println(config.DBUrl)
 	return config
 }
 
