@@ -1,6 +1,6 @@
 
 const explicitBaseURL = import.meta.env.VITE_API_BASE_URL?.trim();
-const apiDomain = import.meta.env.VITE_API_DOMAIN?.trim();
+const apiDomain = import.meta.env.NEXT_PUBLIC_API_DOMAIN?.trim();
 
 const inferProtocol = (value: string) => {
   if (value.startsWith("localhost") || value.startsWith("127.0.0.1")) {
